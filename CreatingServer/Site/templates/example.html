@@ -1,0 +1,59 @@
+<html>
+
+<head>
+  <title>Крутой заголовок</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+
+<body>
+  <marquee>
+
+
+  <h1>Home page</h1>
+  <p>My first Flask site</p>
+  <h1>hey</h1>
+   <img src="https://developer.mozilla.org/en-US/docs/Learn/HTML/Multimedia_and_embedding/Images_in_HTML/image-with-title.png"> </marquee>
+  <p> <img src="{{ url_for('static', filename='images/mem.png') }}"></p>
+
+
+  <table>
+    <colgroup>
+      <col span="7" style="background:Khaki"><!-- С помощью этой конструкции задаем цвет фона для первых двух столбцов таблицы-->
+      <col style="background-color:LightCyan"><!-- Задаем цвет фона для следующего (одного) столбца таблицы-->
+    </colgroup>
+    <tr>
+      <th rowspan="3"> № п/п</th>
+      <th>Наименование</th>
+      <th rowspan="3">Цена, руб.</th>
+      <th>4</th>
+
+
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Карандаш цветной</td>
+      
+      
+      
+
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Линейка 20 см</td>
+      
+      
+
+
+    </tr>
+    <tr>
+      <td>2</td>
+      <td colspan="2">Линейка 20 см</td>
+      <td>30,00</td>
+      
+      </tr>
+      
+      
+  </table>
+</body>
+
+</html>
