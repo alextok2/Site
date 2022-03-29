@@ -11,8 +11,7 @@ import hashlib
 
 
 
-tree = ET.parse('/root/ProjectsVC/CreatingServer/text.xml')
-root = tree.getroot()
+
 
 
 def IP2Int(ip):
@@ -200,12 +199,7 @@ def SearchLoginsAndPasswords(search_login, search_hash):
 
 
 
-def ThereIsLoginsDublicats(newLogin):
-	for person in root.iter('person'): 
-		#print(person.find('login').text)
-		if person.find('login').text == newLogin:
-			return False
-	return True
+
 
 def InputCommands():
 	text= input("$:")
