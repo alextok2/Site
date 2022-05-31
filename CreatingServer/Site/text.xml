@@ -1,0 +1,18 @@
+<info> 
+ <port>9090</port> 
+ <ip>2130706433</ip> 
+ <date>20.02.2022</date> 
+ <time>14:53</time> 
+ <people> 
+    <person name="Tom"> 
+        <login>tom2004</login> 
+        <password>1be7cb2492e12e6657c77e5554e7d9cc</password>
+        <admin>true</admin> 
+    </person> 
+    <person name="Bob"> 
+        <login>bob2001</login> 
+        <password>b8786cd8f23456e8b84788abd022f4ca</password> 
+        <admin>false</admin>
+    </person> 
+<person name="Alex"><login>alex2001</login><password>5c1ae4b9f01d969053daecc23d9d60c3</password><admin>false</admin></person><person name="Tom"><login>tom2004</login><password>1be7cb2492e12e6657c77e5554e7d9cc</password><admin>false</admin></person></people> 
+</info>

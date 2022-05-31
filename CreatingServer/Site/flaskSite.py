@@ -2,9 +2,17 @@ from flask import Flask, render_template, request, jsonify, redirect
 import xml.etree.ElementTree as ET
 import hashlib
 
+from data import db_session
+from data.users import User
+from data.groups import Group
+from data.results import Result
+from data.sessions import Session
+from data.tests import Test
+
+
 app = Flask(__name__)
 
-tree = ET.parse('CreatingServer/text.xml')
+tree = ET.parse('text.xml')
 root = tree.getroot()
 
 def SearchLoginsAndPasswords(search_login, search_hash):
@@ -17,6 +25,15 @@ def SearchLoginsAndPasswords(search_login, search_hash):
 
             if search_hash == hash:
                 return True
+    return False
+
+def SearchLoginsAndPasswords(search_login, search_hash):
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.login==search_login and User.password==search_hash).first()
+    
+    if user != None:
+        print(user.fio)
+        return True
     return False
 
 def ThereIsLoginsDublicats(newLogin):
@@ -111,5 +128,17 @@ def checkAuth(request):
     return False
 
 if __name__ == '__main__':
-    app.run(debug=True, host="localhost")#, ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
+    db_session.global_init("db/blogs.sqlite")
+    # user = User()
+    # user.fio = "Максим Максимов Максимович"
+    # user.login = 'maksim2004'
+    # user.password = 'b8786cd8f23456e8b84788abd022f4ca'
+    
+    # db_sess = db_session.create_session()
+    # db_sess.add(user)
+    # db_sess.commit()
+
+    SearchLoginsAndPasswords("maksim2004", 'b8786cd8f23456e8b84788abd022f4ca')
+    
+    # app.run(debug=True, host="localhost")#, ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
     
