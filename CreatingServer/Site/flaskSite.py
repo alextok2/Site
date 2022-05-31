@@ -111,5 +111,5 @@ def checkAuth(request):
     return False
 
 if __name__ == '__main__':
-    app.run(debug=True, host="localhost")
+    app.run(debug=True, host="localhost")#, ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
     
