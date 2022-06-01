@@ -14,7 +14,7 @@ function doLogin() {
     fetch("/api/login", {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         headers: {
-            'Content-Type': 'application/json' //Mime-type 
+            'Content-Type': 'application/json'//, 'x-access-token' : //Mime-type 
         },
         body: JSON.stringify(loginData)
     }).then(response => {
