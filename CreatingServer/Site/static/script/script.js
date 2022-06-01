@@ -21,7 +21,7 @@ function doLogin() {
         if (response.ok) {
             document.cookie = "login=" + loginData.login;
             document.cookie = "passwordHash=" + loginData.passwordHash;
-            window.location.replace("https://localhost:5000/");
+            window.location.replace("http://localhost:5000/");
         }
         else 
             alert("произощла ошибка");
@@ -65,7 +65,7 @@ function checkPassword() {
 }
 
 function checkLoginExists() {
-    let url = new URL("https://localhost:5000/register/loginExists");
+    let url = new URL("http://localhost:5000/register/loginExists");
 
     url.search = new URLSearchParams({
         login: document.getElementById("login").value
@@ -115,7 +115,7 @@ function doRegister(func){
         body: JSON.stringify(registerData)
     }).then(response => {
         if (response.ok) {
-            window.location.replace("https://localhost:5000/auth");
+            window.location.replace("http://localhost:5000/auth");
         }
         else 
             alert("произощла ошибка");

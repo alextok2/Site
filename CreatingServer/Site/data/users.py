@@ -9,5 +9,6 @@ class User(SqlAlchemyBase):
     fio = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     login = sqlalchemy.Column(sqlalchemy.String, nullable=True, unique=True, index=True)
     password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    role = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
 
 

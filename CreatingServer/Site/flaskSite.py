@@ -1,6 +1,13 @@
-from flask import Flask, render_template, request, jsonify, redirect
+import datetime
+from re import A
+from flask import Flask, make_response, render_template, request, jsonify, redirect, url_for
+from functools import wraps
+import jwt
 import xml.etree.ElementTree as ET
 import hashlib
+import enum
+
+from requests import session
 
 from data import db_session
 from data.users import User
@@ -10,50 +17,96 @@ from data.sessions import Session
 from data.tests import Test
 
 
+class Role(enum.Enum):
+    Student = 0
+    Curator = 1
+    Admin = 2
+
+
+
 app = Flask(__name__)
+app.config['SECRET_KEY'] = "8f42a73054b1749f8f58848be5e6502c"
 
-tree = ET.parse('text.xml')
-root = tree.getroot()
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.args.get('token')
+        # token = None
 
-def SearchLoginsAndPasswords(search_login, search_hash):
-    for person in root.iter('person'): 
-        login = person.find('login').text
+        # if 'x-access-token' in request.headers:
+        #     token = request.headers['x-access-token']
 
-        if login == search_login:
-            
-            hash = (person.find('password').text)
+        if not token:
+            return jsonify({'message' : 'Token is missing'}), 403
+            # return redirect("auth")
 
-            if search_hash == hash:
-                return True
-    return False
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'])
+            print(data["user_id"])
+            with db_session.create_session() as db_sess:
 
-def SearchLoginsAndPasswords(search_login, search_hash):
-    db_sess = db_session.create_session()
-    user = db_sess.query(User).filter(User.login==search_login and User.password==search_hash).first()
+                current_user = db_sess.query(User).filter(User.id==data["user_id"]).first()
+        except:
+            return jsonify({'message' : 'Token is invalid'}), 403
+            # return redirect("auth")
+
+        return f(current_user, *args, **kwargs)
+
+    return decorated
+
+
+@app.route("/poll")
+@token_required
+def Poll(current_user):
     
-    if user != None:
-        print(user.fio)
-        return True
+
+    
+    # token = jwt.encode({'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config['SECRET_KEY'])
+    # eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTQwODQ3Njl9.gN6ZzBsF9GWlok5JRWakqjtSd890Ou2A-g-OyltyAM4
+    # return jsonify({'token' : token.decode('UTF-8')})
+
+    return render_template('poll.html', login=current_user.login)           
+
+
+def SearchLoginsAndPasswords(search_login, search_hash):
+    if search_login != None or search_hash != None:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.login==search_login and User.password==search_hash).first()
+        
+        if user != None:
+            # print(user.fio)
+            return True
     return False
+
 
 def ThereIsLoginsDublicats(newLogin):
-	for person in root.iter('person'): 
-		if person.find('login').text == newLogin:
-			return True
-	return False
+    if newLogin != None:
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.login==newLogin).first()
+        if user != None:
+            # print(user.fio)
+            return True
+    return False
+def CreateNewPerson(new_login, new_fio, new_password):
 
-def CreateNewPerson(newLogin, newName, newPassword):
-	a = root.find('people') 
-	person = ET.SubElement(a, 'person') 
-	login = ET.SubElement(person, 'login') 
-	password = ET.SubElement(person, 'password')
-	admin = ET.SubElement(person, 'admin')
-	person.set('name',newName) 
-	login.text = newLogin 
-	password.text = newPassword 
-	admin.text = "false"
-	
-	tree.write("CreatingServer/text.xml")
+    with db_session.create_session() as db_sess:
+        user = User()
+        user.fio = new_fio
+        user.login = new_login
+        user.password = new_password
+        user.role = Role.Student.value
+        db_sess.add(user)
+        db_sess.commit()
+
+
+        user_session = Session()
+        user_session.user_id = user.id
+        token = jwt.encode({'user_id' : user.id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=180)}, app.config['SECRET_KEY'])
+        user_session.token = token
+        db_sess.add(user_session)
+        db_sess.commit()
+        
+    
 
 
 @app.route("/index")
@@ -66,11 +119,15 @@ def index():
 
 @app.route("/auth")
 def auth():
+    # print(url_for('Register'))
     return render_template('auth.html')
 
 @app.route("/register")
 def Register():
     return render_template('register.html')
+
+
+
 
 @app.route("/api/register", methods=['POST'])
 def checkRegister():
@@ -122,10 +179,15 @@ def about():
 def checkAuth(request):
     login = request.cookies.get('login')
     passwordHash = request.cookies.get('passwordHash')
+    print(login, passwordHash)
     if SearchLoginsAndPasswords(login,passwordHash) == True:
         return True
     
     return False
+
+
+
+
 
 if __name__ == '__main__':
     db_session.global_init("db/blogs.sqlite")
@@ -133,12 +195,13 @@ if __name__ == '__main__':
     # user.fio = "Максим Максимов Максимович"
     # user.login = 'maksim2004'
     # user.password = 'b8786cd8f23456e8b84788abd022f4ca'
+    # user.role = Role.Student.value
     
-    # db_sess = db_session.create_session()
-    # db_sess.add(user)
-    # db_sess.commit()
-
-    SearchLoginsAndPasswords("maksim2004", 'b8786cd8f23456e8b84788abd022f4ca')
+    # with db_session.create_session() as db_sess:
+    #     db_sess.add(user)
+    #     db_sess.commit()
     
-    # app.run(debug=True, host="localhost")#, ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
+    # SearchLoginsAndPasswords1("maksim2004", 'b8786cd8f23456e8b84788abd022f4ca')
+    
+    app.run(debug=True, host="localhost")#, ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
     

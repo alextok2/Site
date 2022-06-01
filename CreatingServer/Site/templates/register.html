@@ -6,22 +6,28 @@
         <div class="main-container">
             <img src="{{ url_for('static', filename='images/register.gif') }}">
             <div>
-                <h3 style="display: inline-block;">Введите имя</h3>
+                <h3 style="display: inline-block;">Введите ФИО</h3>
                 <input id="name" type="text" value="Tom">
             </div>
             <div>
                 <h3 style="display: inline-block;">Введите логин</h3>
                 <input id="login" type="text" value="tom2004" oninput="checkLoginExists()">
-                <div class="loginIndicator">
+                <div class="loginIndicator"></div>
             </div>
             <div>
                 <h3 style="display: inline-block;">Введите пароль</h3>
                 <input id="password" type="text" value="1Qwertyu" oninput="checkPassword()">
-                <div class="passwordIndicator">
+                <div class="passwordIndicator"></div>
                 <div style="margin: 0 15px; word-break: keep-all; position: absolute;" id="message"></div>
             </div>
             
-            <button style="display: flex; margin: auto "  onclick="doRegister()">Зарегестроваться</button>
+            
+            <button   onclick="doRegister()">Зарегистроваться</button>
+            <a  href="http://localhost:5000/auth">Залогиниться</a>
+
+            
+            
+            
         </div>
         <script src="{{ url_for('static', filename='script/script.js') }}"></script>
     </body>

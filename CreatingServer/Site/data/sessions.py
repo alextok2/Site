@@ -7,7 +7,7 @@ class Session(SqlAlchemyBase):
     __tablename__ = "sessions"
 
     token = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
-    user_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey("users.id"))
+    user_id = sqlalchemy.Column(sqlalchemy.Integer,  sqlalchemy.ForeignKey("users.id"), nullable=False)
 
     user = orm.relation('User')
 
