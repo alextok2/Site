@@ -53,13 +53,6 @@ def token_required(f):
     return decorated
 
 
-@app.route("/poll")
-@token_required
-def Poll(current_user):
-
-    return render_template('poll.html', login=current_user.login)           
-
-
 def SearchLoginsAndPasswords(search_login, search_hash):
     if search_login != None or search_hash != None:
         db_sess = db_session.create_session()
@@ -98,6 +91,11 @@ def CreateNewPerson(new_login, new_fio, new_password):
         db_sess.commit()
         
     
+@app.route("/portfolio")
+@token_required
+def Poll(current_user):
+
+    return render_template('portfolio.html', login=current_user.login)           
 
 
 @app.route("/index")
