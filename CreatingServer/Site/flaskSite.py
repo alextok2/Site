@@ -1,12 +1,12 @@
 import datetime
 from re import A
-from flask import Flask, make_response, render_template, request, jsonify, redirect, url_for
+from flask import Flask, make_response, render_template, request, jsonify, redirect, url_for, Response
 from functools import wraps
 import jwt
 import xml.etree.ElementTree as ET
 import hashlib
 import enum
-
+import json
 from requests import session
 
 from data import db_session
@@ -20,7 +20,8 @@ from data.tests import Test
 class Role(enum.Enum):
     Student = 0
     Curator = 1
-    Admin = 2
+    Dekanat = 2
+    Admin = 3
 
 
 
@@ -30,15 +31,12 @@ app.config['SECRET_KEY'] = "8f42a73054b1749f8f58848be5e6502c"
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.args.get('token')
-        # token = None
-
-        # if 'x-access-token' in request.headers:
-        #     token = request.headers['x-access-token']
+        token = request.cookies.get('token')
+        print(token)
 
         if not token:
-            return jsonify({'message' : 'Token is missing'}), 403
-            # return redirect("auth")
+            # return jsonify({'message' : 'Token is missing'}), 403
+            return redirect("auth")
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
@@ -47,8 +45,8 @@ def token_required(f):
 
                 current_user = db_sess.query(User).filter(User.id==data["user_id"]).first()
         except:
-            return jsonify({'message' : 'Token is invalid'}), 403
-            # return redirect("auth")
+            # return jsonify({'message' : 'Token is invalid'}), 403
+            return redirect("auth")
 
         return f(current_user, *args, **kwargs)
 
@@ -58,12 +56,6 @@ def token_required(f):
 @app.route("/poll")
 @token_required
 def Poll(current_user):
-    
-
-    
-    # token = jwt.encode({'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=30)}, app.config['SECRET_KEY'])
-    # eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE2NTQwODQ3Njl9.gN6ZzBsF9GWlok5JRWakqjtSd890Ou2A-g-OyltyAM4
-    # return jsonify({'token' : token.decode('UTF-8')})
 
     return render_template('poll.html', login=current_user.login)           
 
@@ -77,7 +69,6 @@ def SearchLoginsAndPasswords(search_login, search_hash):
             # print(user.fio)
             return True
     return False
-
 
 def ThereIsLoginsDublicats(newLogin):
     if newLogin != None:
@@ -111,11 +102,11 @@ def CreateNewPerson(new_login, new_fio, new_password):
 
 @app.route("/index")
 @app.route("/")
-def index():
-    if checkAuth(request):
-        return render_template('index.html', title="ржач")
-    else:
-        return redirect("auth")
+@token_required
+def index(current_user):
+    
+    return render_template('index.html', login=current_user.login)
+
 
 @app.route("/auth")
 def auth():
@@ -160,33 +151,51 @@ def checkLogin():
 @app.route("/api/login", methods=['POST'])
 def login():
     content = request.json
+    login = request.get_json()['login']
+    passwordHash = request.get_json()['passwordHash']
+    print(login, passwordHash)
 
-    #hash = hashlib.sha256(content['password']+content['login']).hexdigest()
-    print(content['login'],content['passwordHash'])
     if SearchLoginsAndPasswords(content['login'],content['passwordHash']) == True:
-        return "Success", 200
+        
+        with db_session.create_session() as db_sess:
+            # Удаление старого токена
+            user = db_sess.query(User).filter(User.login == login, User.password == passwordHash).first()
+            user_session = db_sess.query(Session).filter(Session.user_id == user.id).delete()
+            db_sess.commit()
+
+            # Создание нового токена
+            user_session = Session()
+            user_session.user_id = user.id
+            token = jwt.encode({'user_id' : user.id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=180)}, app.config['SECRET_KEY'])
+            user_session.token = token
+            db_sess.add(user_session)
+            db_sess.commit()
+        # token.decode('utf-8')
+        data = '{"token":"' + token.decode('utf-8') + '"}'
+        res = json.loads(data)
     
+
+        return res, 200
     return "Record not found", 400
 
-@app.route("/example") 
+""" @app.route("/example") 
 def about():
     if checkAuth(request):
         return render_template('example.html')
     else:
-        return redirect("auth")
+        return redirect("auth") """
 
-
+""" 
 def checkAuth(request):
-    login = request.cookies.get('login')
-    passwordHash = request.cookies.get('passwordHash')
-    print(login, passwordHash)
+    token = request.cookies.get('token')
+    # login = request.cookies.get('login')
+    # passwordHash = request.cookies.get('passwordHash')
+    
+    # print(login, passwordHash)
     if SearchLoginsAndPasswords(login,passwordHash) == True:
         return True
     
-    return False
-
-
-
+    return False """
 
 
 if __name__ == '__main__':
