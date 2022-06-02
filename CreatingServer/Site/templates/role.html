@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Опрос</title>
+    </head>
+    <body>
+        {{ form.hidden_tag() }}
+        {% for item in user %}
+            <b>{{item.login}}</b>
+            
+            <b>{{item.role}}</b>
+            <a href="/role/{{ item.id }}" class="btn btn-warning">
+                Изменить
+            </a>
+            <br>
+        {% endfor %}
+        
+    </body>
+</html>

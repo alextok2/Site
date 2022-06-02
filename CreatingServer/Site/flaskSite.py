@@ -1,3 +1,4 @@
+# from crypt import methods
 import datetime
 from re import A
 from flask import Flask, make_response, render_template, request, jsonify, redirect, url_for, Response
@@ -16,13 +17,15 @@ from data.results import Result
 from data.sessions import Session
 from data.tests import Test
 
+from forms.roles import RoleForm
+
 
 class Role(enum.Enum):
     Student = 0
     Curator = 1
-    Dekanat = 2
-    Admin = 3
+    Admin = 2
 
+roles = ["Студент", "Преподаватель", "Админ"]  
 
 
 app = Flask(__name__)
@@ -32,7 +35,7 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.cookies.get('token')
-        print(token)
+
 
         if not token:
             # return jsonify({'message' : 'Token is missing'}), 403
@@ -40,7 +43,7 @@ def token_required(f):
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
-            print(data["user_id"])
+
             with db_session.create_session() as db_sess:
 
                 current_user = db_sess.query(User).filter(User.id==data["user_id"]).first()
@@ -71,6 +74,7 @@ def ThereIsLoginsDublicats(newLogin):
             # print(user.fio)
             return True
     return False
+
 def CreateNewPerson(new_login, new_fio, new_password):
 
     with db_session.create_session() as db_sess:
@@ -91,12 +95,44 @@ def CreateNewPerson(new_login, new_fio, new_password):
         db_sess.commit()
         
     
-@app.route("/portfolio")
+@app.route("/role")
+@token_required
+def role(current_user):
+    form = RoleForm()
+    db_sess = db_session.create_session()
+    # form.role.choices = [(i,roles[i]) for i in range(3)]
+    
+    if current_user.role == Role.Admin.value:
+
+        user = db_sess.query(User)
+        return render_template('role.html', user=user, form=form)           
+    else:
+        return "У вас недостаточно прав."
+
+@app.route("/role/<int:id>", methods=['GET', 'POST'])
+@token_required
+def edit_role(current_user, id):
+    form = RoleForm()
+    db_sess = db_session.create_session()
+    # form.role.choices = [(i,roles[i]) for i in range(3)]
+    
+    if current_user.role == Role.Admin.value:
+
+        user = db_sess.query(User).filter(User.id == id).first()
+        return render_template('role.html', user=user, form=form)           
+    else:
+        return "У вас недостаточно прав."
+
+
+
+@app.route("/poll")
 @token_required
 def Poll(current_user):
-
-    return render_template('portfolio.html', login=current_user.login)           
-
+    # print(current_user.role)
+    if current_user.role == Role.Admin.value:
+        return render_template('poll.html', login=current_user.login)           
+    else:
+        return "У вас недостаточно прав."
 
 @app.route("/index")
 @app.route("/")
@@ -153,11 +189,12 @@ def login():
     passwordHash = request.get_json()['passwordHash']
     print(login, passwordHash)
 
-    if SearchLoginsAndPasswords(content['login'],content['passwordHash']) == True:
+    if SearchLoginsAndPasswords(login, passwordHash) == True:
         
         with db_session.create_session() as db_sess:
             # Удаление старого токена
-            user = db_sess.query(User).filter(User.login == login, User.password == passwordHash).first()
+
+            user = db_sess.query(User).filter(User.login==login and User.password==passwordHash).first()
             user_session = db_sess.query(Session).filter(Session.user_id == user.id).delete()
             db_sess.commit()
 
