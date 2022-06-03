@@ -1,5 +1,7 @@
 # from crypt import methods
+from dataclasses import field
 import datetime
+from operator import length_hint
 from re import A
 from flask import Flask, make_response, render_template, request, jsonify, redirect, url_for, Response
 from functools import wraps
@@ -9,6 +11,7 @@ import hashlib
 import enum
 import json
 from requests import session
+import os
 
 from data import db_session
 from data.users import User
@@ -17,6 +20,7 @@ from data.results import Result
 from data.sessions import Session
 from data.tests import Test
 
+from forms.tests import GenerateTestForm, SubmitForm
 from forms.roles import RoleForm
 
 
@@ -28,9 +32,13 @@ class Role(enum.Enum):
 
 roles = ["Студент", "Преподаватель", "Админ"]
 
+file_path = os.path.abspath(os.getcwd())+"\db\blogs.sqlite"
+print(file_path)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "8f42a73054b1749f8f58848be5e6502c"
+app.config['ADDRESS'] = "0.0.0.0"
+app.config['PORT'] = "5000"
 
 
 def token_required(f):
@@ -40,7 +48,7 @@ def token_required(f):
 
         if not token:
             # return jsonify({'message' : 'Token is missing'}), 403
-            return redirect("auth")
+            return redirect(url_for("auth"))
 
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'])
@@ -51,7 +59,7 @@ def token_required(f):
                     User.id == data["user_id"]).first()
         except:
             # return jsonify({'message' : 'Token is invalid'}), 403
-            return redirect("auth")
+            return redirect(url_for("auth"))
 
         return f(current_user, *args, **kwargs)
 
@@ -120,39 +128,43 @@ def edit_role(current_user, id):
     if current_user.role != Role.Admin.value:
         return "У вас недостаточно прав."
 
-    form = RoleForm()
+    
     db_sess = db_session.create_session()
-    form.role.choices = [(i, roles[i]) for i in range(3)]
-
     user = db_sess.query(User).filter(User.id == id).first()
+    form = RoleForm(role=user.role)
+
+    form.role.choices = [(i, roles[i]) for i in range(len(Role))]
+    
 
     if form.validate_on_submit():
 
         user.role = form.role.data
-
         print(form.role.data)
-        # if old_category_id != new_category_id:
-        #     category.id = old_category_id
-        #     category.name = old_category_name
-        #     news.categories.remove(category)
-        #     #news.categories.remove(category) не работает
-
-        #     category.id = new_category_id
-        #     news.categories.append(category)
-
-        # db_sess.commit()
+        db_sess.commit()
+        
         return redirect(url_for('role'))
     return render_template('edit_role.html', user=user, form=form)
 
 
-@app.route("/poll")
+@app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
 @token_required
-def Poll(current_user):
-    # print(current_user.role)
-    if current_user.role == Role.Admin.value:
-        return render_template('poll.html', login=current_user.login)
-    else:
-        return "У вас недостаточно прав."
+def Poll(current_user, id_test):
+
+
+    db_sess = db_session.create_session()
+    test = db_sess.query(Test).filter(Test.id == id_test).first()
+    questions = test.questions.split("%s")
+    text = test.answers
+    answers_json = json.loads(text)
+
+
+    # for answer in answers_json['answers']:
+    #     answers = [(i, answer[i]) for i in range(len(answer))]
+
+
+    return render_template('poll.html', fio=current_user.fio, test=test.name,
+                    answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
+
 
 
 @app.route("/index")
@@ -257,7 +269,7 @@ def checkAuth(request):
 
 
 if __name__ == '__main__':
-    db_session.global_init("db/blogs.sqlite")
+    db_session.global_init("blogs.sqlite")
     # user = User()
     # user.fio = "Максим Максимов Максимович"
     # user.login = 'maksim2004'
@@ -267,8 +279,10 @@ if __name__ == '__main__':
     # with db_session.create_session() as db_sess:
     #     db_sess.add(user)
     #     db_sess.commit()
+    # db_sess = db_session.create_session()
 
-    # SearchLoginsAndPasswords1("maksim2004", 'b8786cd8f23456e8b84788abd022f4ca')
+   
+
 
     # , ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
-    app.run(debug=True, host="localhost")
+    app.run(debug=True, host=app.config["ADDRESS"], port=app.config['PORT'])

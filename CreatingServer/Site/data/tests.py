@@ -9,6 +9,7 @@ class Test(SqlAlchemyBase):
     name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     questions = sqlalchemy.Column(sqlalchemy.String, unique=True, index=True)
     answers = sqlalchemy.Column(sqlalchemy.String, unique=True, index=True)
+    max_score = sqlalchemy.Column(sqlalchemy.Integer, nullable=False)
 
     result = orm.relation("Result", back_populates='test')
 

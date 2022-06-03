@@ -1,9 +1,33 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
         <title>Опрос</title>
     </head>
     <body>
-        <h1>Здравствуйте {{login}}</h1>
+        <form method="POST" action="">
+            
+            {{fio}}
+            <h1>{{test}}</h1>
+            <div class="line"></div>
+            <br>
+
+            {% for item in range(length) %}
+            
+                <b>{{questions[item]}}</b>
+                <br>
+                {% for item1 in answers[item] %}
+                    <form>
+                        <input type="radio" checked=true>{{item1}}</input>
+                        <br>
+                    </form> 
+                {% endfor %}
+                
+            {% endfor %}
+            
+            <button onclick="Enter()">Принять</button>
+            
+        </form>
+        <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
     </body>
 </html>

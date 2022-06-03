@@ -3,14 +3,15 @@
 
     <head>
         <!--<meta charset="utf-8"># -->
-        <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylessheet"
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+        <!-- <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylessheet" -->
         
     </head>
 
     <body>
         <div>
             <p>{{login}}</p>
-            <a href="">Портфолио</a>
+            <a href="">Изменить роли пользователям</a>
         </div>
     </body>
 

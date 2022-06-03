@@ -1,35 +1,33 @@
 <html>
-    <head>   
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    </head>
-    <body background="{{ url_for('static', filename='images/bg_stars.gif') }}">
-        <div class="main-container">
-            <img src="{{ url_for('static', filename='images/register.gif') }}">
-            <div>
-                <h3 style="display: inline-block;">Введите ФИО</h3>
-                <input id="name" type="text" value="Tom">
-            </div>
-            <div>
-                <h3 style="display: inline-block;">Введите логин</h3>
-                <input id="login" type="text" value="tom2004" oninput="checkLoginExists()">
-                <div class="loginIndicator"></div>
-            </div>
-            <div>
-                <h3 style="display: inline-block;">Введите пароль</h3>
-                <input id="password" type="text" value="1Qwertyu" oninput="checkPassword()">
-                <div class="passwordIndicator"></div>
-                <div style="margin: 0 15px; word-break: keep-all; position: absolute;" id="message"></div>
-            </div>
-            
-            
-            <button   onclick="doRegister()">Зарегистроваться</button>
-            <a  href="http://localhost:5000/auth">Залогиниться</a>
 
-            
-            
-            
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+
+<body background="{{ url_for('static', filename='images/bg_stars.gif') }}">
+    <div class="main-container">
+        <img src="{{ url_for('static', filename='images/register.gif') }}">
+        <div>
+            <h3 style="display: inline-block;">Введите ФИО</h3>
+            <input id="name" type="text" value="Tom">
         </div>
-        <script src="{{ url_for('static', filename='script/script.js') }}"></script>
-    </body>
+        <div>
+            <h3 style="display: inline-block;">Введите логин</h3>
+            <input id="login" type="text" value="tom2004" oninput="checkLoginExists()">
+            <div class="loginIndicator"></div>
+        </div>
+        <div>
+            <h3 style="display: inline-block;">Введите пароль</h3>
+            <input id="password" type="text" value="1Qwertyu" oninput="checkPassword()">
+            <div class="passwordIndicator"></div>
+            <div class="message-box" id="message"></div>
+        </div>
+        <div>
+            <button id="register_button" onclick="doRegister()">Зарегистроваться</button>
+            <a href="/auth">Залогиниться</a>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script/script.js') }}"></script>
+</body>
 
 </html>

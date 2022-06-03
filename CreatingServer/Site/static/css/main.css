@@ -1,9 +1,9 @@
 body {
-    background: Linen;
-    margin-top: 50px;
-    margin-left: 50px;
-    min-height: 100%;
-    min-width: 100%;
+  background: Linen;
+  margin-top: 50px;
+  margin-left: 50px;
+  min-height: 100%;
+  min-width: 100%;
 }
 
 html {
@@ -21,6 +21,7 @@ h1 {
   font-family: Verdana, Geneva, sans-serif;
   font-size: 2.5em;
   color: FireBrick;
+  margin-bottom: 4px;
 }
 
 .main-container {
@@ -50,4 +51,15 @@ h1 {
   width: 10px;
   background-color: red;
   border-radius: 50%;
+}
+
+.message-box {
+  position: relative;
+  background-color: white;
+  top: -5px;
+}
+
+.line {
+  border-bottom: 2px solid FireBrick;
+  width: 70%;
 }
