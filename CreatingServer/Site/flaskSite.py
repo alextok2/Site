@@ -116,18 +116,20 @@ def role(current_user):
 @app.route("/role/<int:id>", methods=['GET', 'POST'])
 @token_required
 def edit_role(current_user, id):
-    form = RoleForm()
-    db_sess = db_session.create_session()
-    form.role.choices = [(i, roles[i]) for i in range(3)]
 
     if current_user.role != Role.Admin.value:
         return "У вас недостаточно прав."
+
+    form = RoleForm()
+    db_sess = db_session.create_session()
+    form.role.choices = [(i, roles[i]) for i in range(3)]
 
     user = db_sess.query(User).filter(User.id == id).first()
 
     if form.validate_on_submit():
 
         user.role = form.role.data
+
         print(form.role.data)
         # if old_category_id != new_category_id:
         #     category.id = old_category_id
