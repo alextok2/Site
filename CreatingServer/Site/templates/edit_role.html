@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Опрос</title>
+</head>
+
+<body>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <b>Логин</b>
+        {{user.login}}
+
+        <br>
+        <b>{{form.role.label}}</b>
+        {{form.role()}}
+        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+    </form>
+</body>
+
+</html>

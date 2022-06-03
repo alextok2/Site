@@ -13,6 +13,7 @@ def global_init(db_file):
         return
     if not db_file or not db_file.strip():
         raise Exception("Need to select database.")
+    
     conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
     print(f"Connenting to database with {conn_str}")  # Подключение к базе данных по адресу
     engine = sa.create_engine(conn_str, echo=False)

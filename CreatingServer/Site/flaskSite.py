@@ -25,17 +25,18 @@ class Role(enum.Enum):
     Curator = 1
     Admin = 2
 
-roles = ["Студент", "Преподаватель", "Админ"]  
+
+roles = ["Студент", "Преподаватель", "Админ"]
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "8f42a73054b1749f8f58848be5e6502c"
 
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.cookies.get('token')
-
 
         if not token:
             # return jsonify({'message' : 'Token is missing'}), 403
@@ -46,7 +47,8 @@ def token_required(f):
 
             with db_session.create_session() as db_sess:
 
-                current_user = db_sess.query(User).filter(User.id==data["user_id"]).first()
+                current_user = db_sess.query(User).filter(
+                    User.id == data["user_id"]).first()
         except:
             # return jsonify({'message' : 'Token is invalid'}), 403
             return redirect("auth")
@@ -59,21 +61,24 @@ def token_required(f):
 def SearchLoginsAndPasswords(search_login, search_hash):
     if search_login != None or search_hash != None:
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.login==search_login and User.password==search_hash).first()
-        
+        user = db_sess.query(User).filter(
+            User.login == search_login and User.password == search_hash).first()
+
         if user != None:
             # print(user.fio)
             return True
     return False
 
+
 def ThereIsLoginsDublicats(newLogin):
     if newLogin != None:
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.login==newLogin).first()
+        user = db_sess.query(User).filter(User.login == newLogin).first()
         if user != None:
             # print(user.fio)
             return True
     return False
+
 
 def CreateNewPerson(new_login, new_fio, new_password):
 
@@ -86,43 +91,56 @@ def CreateNewPerson(new_login, new_fio, new_password):
         db_sess.add(user)
         db_sess.commit()
 
-
         user_session = Session()
         user_session.user_id = user.id
-        token = jwt.encode({'user_id' : user.id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=180)}, app.config['SECRET_KEY'])
+        token = jwt.encode({'user_id': user.id, 'exp': datetime.datetime.utcnow(
+        ) + datetime.timedelta(minutes=180)}, app.config['SECRET_KEY'])
         user_session.token = token
         db_sess.add(user_session)
         db_sess.commit()
-        
-    
+
+
 @app.route("/role")
 @token_required
 def role(current_user):
-    form = RoleForm()
     db_sess = db_session.create_session()
-    # form.role.choices = [(i,roles[i]) for i in range(3)]
-    
+
     if current_user.role == Role.Admin.value:
 
         user = db_sess.query(User)
-        return render_template('role.html', user=user, form=form)           
+        return render_template('role.html', user=user, roles=roles)
     else:
         return "У вас недостаточно прав."
+
 
 @app.route("/role/<int:id>", methods=['GET', 'POST'])
 @token_required
 def edit_role(current_user, id):
     form = RoleForm()
     db_sess = db_session.create_session()
-    # form.role.choices = [(i,roles[i]) for i in range(3)]
-    
-    if current_user.role == Role.Admin.value:
+    form.role.choices = [(i, roles[i]) for i in range(3)]
 
-        user = db_sess.query(User).filter(User.id == id).first()
-        return render_template('role.html', user=user, form=form)           
-    else:
+    if current_user.role != Role.Admin.value:
         return "У вас недостаточно прав."
 
+    user = db_sess.query(User).filter(User.id == id).first()
+
+    if form.validate_on_submit():
+
+        user.role = form.role.data
+        print(form.role.data)
+        # if old_category_id != new_category_id:
+        #     category.id = old_category_id
+        #     category.name = old_category_name
+        #     news.categories.remove(category)
+        #     #news.categories.remove(category) не работает
+
+        #     category.id = new_category_id
+        #     news.categories.append(category)
+
+        # db_sess.commit()
+        return redirect(url_for('role'))
+    return render_template('edit_role.html', user=user, form=form)
 
 
 @app.route("/poll")
@@ -130,15 +148,16 @@ def edit_role(current_user, id):
 def Poll(current_user):
     # print(current_user.role)
     if current_user.role == Role.Admin.value:
-        return render_template('poll.html', login=current_user.login)           
+        return render_template('poll.html', login=current_user.login)
     else:
         return "У вас недостаточно прав."
+
 
 @app.route("/index")
 @app.route("/")
 @token_required
 def index(current_user):
-    
+
     return render_template('index.html', login=current_user.login)
 
 
@@ -147,11 +166,10 @@ def auth():
     # print(url_for('Register'))
     return render_template('auth.html')
 
+
 @app.route("/register")
 def Register():
     return render_template('register.html')
-
-
 
 
 @app.route("/api/register", methods=['POST'])
@@ -160,7 +178,7 @@ def checkRegister():
     login = content['login']
     password = content['passwordHash']
     name = content['name']
-    
+
     CreateNewPerson(login, name, password)
 
     return "Success", 200
@@ -170,18 +188,18 @@ def checkRegister():
 def checkLogin():
     login = request.args.get('login')
     print(login)
-    if ThereIsLoginsDublicats(login):   
+    if ThereIsLoginsDublicats(login):
         response = {
             "isValid": False
         }
-    else:  
+    else:
         response = {
             "isValid": True
         }
 
     return jsonify(response)
 
-    
+
 @app.route("/api/login", methods=['POST'])
 def login():
     content = request.json
@@ -190,28 +208,31 @@ def login():
     print(login, passwordHash)
 
     if SearchLoginsAndPasswords(login, passwordHash) == True:
-        
+
         with db_session.create_session() as db_sess:
             # Удаление старого токена
 
-            user = db_sess.query(User).filter(User.login==login and User.password==passwordHash).first()
-            user_session = db_sess.query(Session).filter(Session.user_id == user.id).delete()
+            user = db_sess.query(User).filter(
+                User.login == login and User.password == passwordHash).first()
+            user_session = db_sess.query(Session).filter(
+                Session.user_id == user.id).delete()
             db_sess.commit()
 
             # Создание нового токена
             user_session = Session()
             user_session.user_id = user.id
-            token = jwt.encode({'user_id' : user.id, 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=180)}, app.config['SECRET_KEY'])
+            token = jwt.encode({'user_id': user.id, 'exp': datetime.datetime.utcnow(
+            ) + datetime.timedelta(minutes=180)}, app.config['SECRET_KEY'])
             user_session.token = token
             db_sess.add(user_session)
             db_sess.commit()
         # token.decode('utf-8')
         data = '{"token":"' + token.decode('utf-8') + '"}'
         res = json.loads(data)
-    
 
         return res, 200
     return "Record not found", 400
+
 
 """ @app.route("/example") 
 def about():
@@ -240,12 +261,12 @@ if __name__ == '__main__':
     # user.login = 'maksim2004'
     # user.password = 'b8786cd8f23456e8b84788abd022f4ca'
     # user.role = Role.Student.value
-    
+
     # with db_session.create_session() as db_sess:
     #     db_sess.add(user)
     #     db_sess.commit()
-    
+
     # SearchLoginsAndPasswords1("maksim2004", 'b8786cd8f23456e8b84788abd022f4ca')
-    
-    app.run(debug=True, host="localhost")#, ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
-    
+
+    # , ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
+    app.run(debug=True, host="localhost")

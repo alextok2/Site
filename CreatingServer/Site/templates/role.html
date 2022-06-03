@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Опрос</title>
-    </head>
-    <body>
-        {{ form.hidden_tag() }}
-        {% for item in user %}
-            <b>{{item.login}}</b>
-            
-            <b>{{item.role}}</b>
-            <a href="/role/{{ item.id }}" class="btn btn-warning">
-                Изменить
-            </a>
-            <br>
-        {% endfor %}
-        
-    </body>
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Опрос</title>
+</head>
+
+<body>
+
+    {% for item in user %}
+    <b>{{item.login}}</b>
+
+    <b>{{roles[item.role]}}</b>
+    <a href="/role/{{ item.id }}" class="btn btn-warning">
+        Изменить
+    </a>
+    <br>
+    {% endfor %}
+
+</body>
+
 </html>
