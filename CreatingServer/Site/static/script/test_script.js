@@ -1,3 +1,3 @@
-function Enter(){
-    console.log("1")
+function Enter() {
+    alert("1337")
 }

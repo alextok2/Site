@@ -10,10 +10,13 @@
 
 <body>
     <div>
-        <p>{{login}}</p>
-        <a href={{path_role}}>Изменить роли пользователям</a>
+        {% for id, value in test_name %}
+        <a href="poll\{{id}}">{{value}}</a>
         <br>
-        <a href={{path_poll}}>Опрос</a>
+        {% endfor %}
+
+        <!-- <a href={{path}}>Изменить роли пользователям</a>
+        <a href={{path}}>Изменить роли пользователям</a> -->
     </div>
 </body>
 

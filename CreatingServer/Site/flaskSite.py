@@ -128,43 +128,38 @@ def edit_role(current_user, id):
     if current_user.role != Role.Admin.value:
         return "У вас недостаточно прав."
 
-    
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == id).first()
     form = RoleForm(role=user.role)
 
     form.role.choices = [(i, roles[i]) for i in range(len(Role))]
-    
 
     if form.validate_on_submit():
 
         user.role = form.role.data
         print(form.role.data)
         db_sess.commit()
-        
+
         return redirect(url_for('role'))
     return render_template('edit_role.html', user=user, form=form)
 
 
 @app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
 @token_required
-def Poll(current_user, id_test):
-
+def poll(current_user, id_test):
 
     db_sess = db_session.create_session()
     test = db_sess.query(Test).filter(Test.id == id_test).first()
+
     questions = test.questions.split("%s")
     text = test.answers
     answers_json = json.loads(text)
 
-
     # for answer in answers_json['answers']:
     #     answers = [(i, answer[i]) for i in range(len(answer))]
 
-
     return render_template('poll.html', fio=current_user.fio, test=test.name,
-                    answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
-
+                           answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
 
 
 @app.route("/index")
@@ -172,21 +167,38 @@ def Poll(current_user, id_test):
 @token_required
 def index(current_user):
 
-    return render_template('index.html', login=current_user.login)
+    return render_template('index.html', login=current_user.login, path_role=url_for('role'), path_poll=url_for('all_poll'))
 
 
-@app.route("/auth")
+@app.route("/poll")
+@token_required
+def all_poll(current_user):
+    db_sess = db_session.create_session()
+    tests = db_sess.query(Test).all()
+
+    # print(tests.name)
+    i = 1
+    test_name = []
+    for test in tests:
+
+        test_name.append((i, test.name))
+        i += 1
+
+    return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"))
+
+
+@ app.route("/auth")
 def auth():
     # print(url_for('Register'))
     return render_template('auth.html')
 
 
-@app.route("/register")
+@ app.route("/register")
 def Register():
     return render_template('register.html')
 
 
-@app.route("/api/register", methods=['POST'])
+@ app.route("/api/register", methods=['POST'])
 def checkRegister():
     content = request.json
     login = content['login']
@@ -198,7 +210,7 @@ def checkRegister():
     return "Success", 200
 
 
-@app.route("/register/loginExists")
+@ app.route("/register/loginExists")
 def checkLogin():
     login = request.args.get('login')
     print(login)
@@ -214,7 +226,7 @@ def checkLogin():
     return jsonify(response)
 
 
-@app.route("/api/login", methods=['POST'])
+@ app.route("/api/login", methods=['POST'])
 def login():
     content = request.json
     login = request.get_json()['login']
@@ -248,23 +260,23 @@ def login():
     return "Record not found", 400
 
 
-""" @app.route("/example") 
+""" @app.route("/example")
 def about():
     if checkAuth(request):
         return render_template('example.html')
     else:
         return redirect("auth") """
 
-""" 
+"""
 def checkAuth(request):
     token = request.cookies.get('token')
     # login = request.cookies.get('login')
     # passwordHash = request.cookies.get('passwordHash')
-    
+
     # print(login, passwordHash)
     if SearchLoginsAndPasswords(login,passwordHash) == True:
         return True
-    
+
     return False """
 
 
@@ -280,9 +292,6 @@ if __name__ == '__main__':
     #     db_sess.add(user)
     #     db_sess.commit()
     # db_sess = db_session.create_session()
-
-   
-
 
     # , ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
     app.run(debug=True, host=app.config["ADDRESS"], port=app.config['PORT'])
