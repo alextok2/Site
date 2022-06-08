@@ -3,25 +3,28 @@
 
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    <style>br {
-        line-height:22px;
-     }</style>
-    <title>Опрос</title>
 </head>
 
 <body>
     {% extends "main.html" %}
     {% block content %}
+        
+        <a href="" class="btn btn-warning">
+            Добавить нового пользователям
+        </a>
+        <br>
+        <br>
+        {% for item in user %}
+            <b>{{item.login}}</b>
 
-    {% for item in user %}
-    <b>{{item.login}}</b>
+            <b>{{roles[item.role]}}</b>
+            <a href="/role/{{ item.id }}" class="btn btn-warning">
+                Изменить
+            </a>
 
-    <b>{{roles[item.role]}}</b>
-    <a href="/role/{{ item.id }}" class="btn btn-warning">
-        Изменить
-    </a>
-    <br>
-    {% endfor %}
+            <br>
+        {% endfor %}
+        
     {% endblock %}
 </body>
 

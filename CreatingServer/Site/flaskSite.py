@@ -1,4 +1,5 @@
 # from crypt import methods
+from traceback import print_tb
 from jinja2 import Template
 from dataclasses import field
 import datetime
@@ -133,6 +134,17 @@ def role(current_user):
     else:
         return "У вас недостаточно прав."
 
+@app.route("/create_user")
+@token_required
+def create_user(current_user):
+    if current_user.role != Role.Admin.value:
+        return "У вас недостаточно прав."
+
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).order_by(User.id.desc()).first()
+
+    print(user.id)
+    return redirect(url_for("edit_role", id=user.id))
 
 @app.route("/role/<int:id>", methods=['GET', 'POST'])
 @token_required
@@ -202,6 +214,7 @@ def poll(current_user, id_test):
 
         db_sess.add(result)
         db_sess.commit()
+        return redirect(url_for('show_dashboard_result'))
 
     return render_template('poll.html', test=test.name,
                            answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
@@ -225,26 +238,15 @@ def show_dashboard_result(current_user):
     if not x or not y:
         return redirect(url_for("all_poll"))
 
-    y_key = []
     x_best = []
-
-    if len(y) == 1:
-        y_key.append(y[0])
-
-    else:
-        for i in range(len(y)-1):
-            if y[i] != y[i+1]:
-                y_key.append(y[i])
+    y_key = list(set(y))
 
     old_i = None
     k = -1
     for i in y_key:
-
         for j in range(len(y)):
             if y[j] == i:
-                print(y[j])
                 if old_i != i:
-                    print(y[j])
                     x_best.append(x[j])
                     old_i = i
                     k += 1
@@ -252,11 +254,7 @@ def show_dashboard_result(current_user):
                 if x_best[k] < x[j]:
                     x_best[k] = x[j]
 
-    print(y_key, x_best)
-
-    fig1 = px.bar(y=y_key, x=x_best, labels=dict(
-        x="Оценки", y="Дисциплины", color="Place"))
-
+    fig1 = px.bar(y=y_key, x=x_best, labels=dict(x="Оценки", y="Дисциплины", color="Place"))
     graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template("index2.html", graph1JSON=graph1JSON)
@@ -289,6 +287,17 @@ def index(current_user):
 
     return render_template('index.html', login=current_user.login, path_role=url_for('role'), path_poll=url_for('all_poll'))
 
+
+@app.route("/api/sigh_out")
+@token_required
+def sigh_out(current_user):
+    print(current_user.id)
+    db_sess = db_session.create_session()
+    db_sess.query(Session).filter(Session.user_id == current_user.id).delete()
+    db_sess.commit()
+    res = make_response(redirect(url_for("auth")))
+    res.set_cookie('token', "", expires=0)
+    return res
 
 @ app.route("/auth")
 def auth():
@@ -366,8 +375,6 @@ def login():
 @app.route("/cabinet")
 @token_required
 def cabinet(current_user):
-    if current_user.role != Role.Admin.value:
-        return "У вас недостаточно прав."
     return render_template('cabinet.html', fio=current_user.fio)
 
 
@@ -385,6 +392,5 @@ if __name__ == '__main__':
     # db_sess = db_session.create_session()
 
     # , ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
-    # app.jinja_env.globals.update(clever_function=clever_function)
     app.jinja_env.globals.update(clear_token=clear_token)
     app.run(debug=True, host=app.config["ADDRESS"], port=app.config['PORT'])

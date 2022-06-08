@@ -5,7 +5,6 @@
     integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
   <!-- https://github.com/michalsnik/aos -->
   <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
-  <link rel="stylesheet" href="{{url_for('static', filename = 'css/dashboard.css')}}" type="text/css">
 </head>
 
 <body>
@@ -34,7 +33,7 @@
             <a class="nav-link text-white" href="{{url_for('cabinet')}}">Личный кабинет</a>
           </li>
           <li class="nav-item">
-            <input class="nav-link text-white"></input>
+            <a class="nav-link text-white" href="{{url_for('sigh_out')}}">Выйти</a>
           </li>
         </ul>
       </div>
