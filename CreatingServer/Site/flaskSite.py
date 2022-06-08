@@ -1,4 +1,5 @@
 # from crypt import methods
+from jinja2 import Template
 from dataclasses import field
 import datetime
 from operator import length_hint
@@ -43,7 +44,7 @@ print(file_path)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "8f42a73054b1749f8f58848be5e6502c"
-app.config['ADDRESS'] = "0.0.0.0"
+app.config['ADDRESS'] = "127.0.0.1"
 app.config['PORT'] = "5000"
 
 
@@ -70,6 +71,12 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
 
     return decorated
+
+
+def clear_token():
+    token = request.cookies.get('token')
+    print(token)
+    # print(current_user.fio)
 
 
 def SearchLoginsAndPasswords(search_login, search_hash):
@@ -180,12 +187,12 @@ def poll(current_user, id_test):
 
     if request.method == 'POST':
         score = 0
-        for i in range(len(answers_json['answers'])):  
+        for i in range(len(answers_json['answers'])):
 
             if int(request.form.get(f'answer{i}')) == answers_json['right_answers'][i]:
                 score += 1
-                
-        results = round(score / test.max_score * 100 )
+
+        results = round(score / test.max_score * 100)
 
         result = Result()
         result.test_id = id_test
@@ -196,12 +203,8 @@ def poll(current_user, id_test):
         db_sess.add(result)
         db_sess.commit()
 
-
-        
-
     return render_template('poll.html', test=test.name,
                            answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
-
 
 
 @app.route("/dashboard")
@@ -209,19 +212,18 @@ def poll(current_user, id_test):
 def show_dashboard_result(current_user):
 
     db_sess = db_session.create_session()
-    results = db_sess.query(Result).filter(Result.user_id == current_user.id).all()
-    
+    results = db_sess.query(Result).filter(
+        Result.user_id == current_user.id).all()
 
     y = []
     x = []
     for result in results:
         x.append(result.score)
-        y.append(db_sess.query(Test).filter(Test.id == result.test_id).first().name)
+        y.append(db_sess.query(Test).filter(
+            Test.id == result.test_id).first().name)
 
-    
     if not x or not y:
         return redirect(url_for("all_poll"))
-
 
     y_key = []
     x_best = []
@@ -237,7 +239,7 @@ def show_dashboard_result(current_user):
     old_i = None
     k = -1
     for i in y_key:
-        
+
         for j in range(len(y)):
             if y[j] == i:
                 print(y[j])
@@ -249,35 +251,35 @@ def show_dashboard_result(current_user):
 
                 if x_best[k] < x[j]:
                     x_best[k] = x[j]
-    
+
     print(y_key, x_best)
 
-    fig1 = px.bar( y=y_key, x=x_best, labels=dict(x="Оценки", y="Дисциплины", color="Place"))
+    fig1 = px.bar(y=y_key, x=x_best, labels=dict(
+        x="Оценки", y="Дисциплины", color="Place"))
 
-    graph1JSON = json.dumps(fig1, cls = plotly.utils.PlotlyJSONEncoder)
+    graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template("index2.html", graph1JSON=graph1JSON)
+
 
 @app.route("/results")
 @token_required
 def show_result(current_user):
     db_sess = db_session.create_session()
-    results = db_sess.query(Result).filter(Result.user_id == current_user.id).all()
-    
+    results = db_sess.query(Result).filter(
+        Result.user_id == current_user.id).all()
+
     tests_name = []
 
-    
-
     for result in results:
-       tests_name.append(db_sess.query(Test).filter(Test.id == result.test_id).first().name)
-
+        tests_name.append(db_sess.query(Test).filter(
+            Test.id == result.test_id).first().name)
 
     # for test in tests:
     #     for test1 in test:
     #         print(test1.name)
 
-    return render_template("results.html", results=results, fio = current_user.fio, tests_name=tests_name)
-
+    return render_template("results.html", results=results, fio=current_user.fio, tests_name=tests_name)
 
 
 @app.route("/index")
@@ -286,8 +288,6 @@ def show_result(current_user):
 def index(current_user):
 
     return render_template('index.html', login=current_user.login, path_role=url_for('role'), path_poll=url_for('all_poll'))
-
-
 
 
 @ app.route("/auth")
@@ -362,6 +362,7 @@ def login():
         return res, 200
     return "Record not found", 400
 
+
 @app.route("/cabinet")
 @token_required
 def cabinet(current_user):
@@ -384,4 +385,6 @@ if __name__ == '__main__':
     # db_sess = db_session.create_session()
 
     # , ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
+    # app.jinja_env.globals.update(clever_function=clever_function)
+    app.jinja_env.globals.update(clear_token=clear_token)
     app.run(debug=True, host=app.config["ADDRESS"], port=app.config['PORT'])
