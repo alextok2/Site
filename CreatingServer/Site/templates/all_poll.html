@@ -9,6 +9,9 @@
 </head>
 
 <body>
+    {% extends "main.html" %}
+    {% block content %}
+    
     <div>
         {% for id, value in test_name %}
         <a href="poll\{{id}}">{{value}}</a>
@@ -18,6 +21,7 @@
         <!-- <a href={{path}}>Изменить роли пользователям</a>
         <a href={{path}}>Изменить роли пользователям</a> -->
     </div>
+    {% endblock %}
 </body>
 
 </html>

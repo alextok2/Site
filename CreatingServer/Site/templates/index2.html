@@ -1,0 +1,29 @@
+{% extends "main.html" %}
+{% block content %}
+    <div class="site-header-logo">
+        <h1 class="text-center">
+            Результаты тестов
+        </h1>
+    </div>
+
+    <div class="row p-4">
+        <div class="card m-auto" style="width: 90%;" data-aos="fade-left">
+            <div class="card-body">
+                <div id="chart1"></div>
+                <p class="card-text">
+
+
+                </p>
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript">
+        var graphs1 = {{ graph1JSON | safe}};
+        Plotly.plot("chart1", graphs1,{});
+    </script>
+
+{% endblock %}

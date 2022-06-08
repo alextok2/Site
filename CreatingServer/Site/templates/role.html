@@ -3,10 +3,15 @@
 
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <style>br {
+        line-height:22px;
+     }</style>
     <title>Опрос</title>
 </head>
 
 <body>
+    {% extends "main.html" %}
+    {% block content %}
 
     {% for item in user %}
     <b>{{item.login}}</b>
@@ -17,7 +22,7 @@
     </a>
     <br>
     {% endfor %}
-
+    {% endblock %}
 </body>
 
 </html>

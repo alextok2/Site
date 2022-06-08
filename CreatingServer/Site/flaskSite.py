@@ -12,6 +12,12 @@ import enum
 import json
 from requests import session
 import os
+import pandas as pd
+import plotly
+import plotly.express as px
+
+
+from sqlalchemy import true
 
 from data import db_session
 from data.users import User
@@ -144,32 +150,6 @@ def edit_role(current_user, id):
     return render_template('edit_role.html', user=user, form=form)
 
 
-@app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
-@token_required
-def poll(current_user, id_test):
-
-    db_sess = db_session.create_session()
-    test = db_sess.query(Test).filter(Test.id == id_test).first()
-
-    questions = test.questions.split("%s")
-    text = test.answers
-    answers_json = json.loads(text)
-
-    # for answer in answers_json['answers']:
-    #     answers = [(i, answer[i]) for i in range(len(answer))]
-
-    return render_template('poll.html', fio=current_user.fio, test=test.name,
-                           answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
-
-
-@app.route("/index")
-@app.route("/")
-@token_required
-def index(current_user):
-
-    return render_template('index.html', login=current_user.login, path_role=url_for('role'), path_poll=url_for('all_poll'))
-
-
 @app.route("/poll")
 @token_required
 def all_poll(current_user):
@@ -185,6 +165,129 @@ def all_poll(current_user):
         i += 1
 
     return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"))
+
+
+@app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
+@token_required
+def poll(current_user, id_test):
+
+    db_sess = db_session.create_session()
+    test = db_sess.query(Test).filter(Test.id == id_test).first()
+
+    questions = test.questions.split("%s")
+    text = test.answers
+    answers_json = json.loads(text)
+
+    if request.method == 'POST':
+        score = 0
+        for i in range(len(answers_json['answers'])):  
+
+            if int(request.form.get(f'answer{i}')) == answers_json['right_answers'][i]:
+                score += 1
+                
+        results = round(score / test.max_score * 100 )
+
+        result = Result()
+        result.test_id = id_test
+        result.user_id = current_user.id
+        result.score = results
+        result.date = datetime.datetime.utcnow()
+
+        db_sess.add(result)
+        db_sess.commit()
+
+
+        
+
+    return render_template('poll.html', test=test.name,
+                           answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
+
+
+
+@app.route("/dashboard")
+@token_required
+def show_dashboard_result(current_user):
+
+    db_sess = db_session.create_session()
+    results = db_sess.query(Result).filter(Result.user_id == current_user.id).all()
+    
+
+    y = []
+    x = []
+    for result in results:
+        x.append(result.score)
+        y.append(db_sess.query(Test).filter(Test.id == result.test_id).first().name)
+
+    
+    if not x or not y:
+        return redirect(url_for("all_poll"))
+
+
+    y_key = []
+    x_best = []
+
+    if len(y) == 1:
+        y_key.append(y[0])
+
+    else:
+        for i in range(len(y)-1):
+            if y[i] != y[i+1]:
+                y_key.append(y[i])
+
+    old_i = None
+    k = -1
+    for i in y_key:
+        
+        for j in range(len(y)):
+            if y[j] == i:
+                print(y[j])
+                if old_i != i:
+                    print(y[j])
+                    x_best.append(x[j])
+                    old_i = i
+                    k += 1
+
+                if x_best[k] < x[j]:
+                    x_best[k] = x[j]
+    
+    print(y_key, x_best)
+
+    fig1 = px.bar( y=y_key, x=x_best, labels=dict(x="Оценки", y="Дисциплины", color="Place"))
+
+    graph1JSON = json.dumps(fig1, cls = plotly.utils.PlotlyJSONEncoder)
+
+    return render_template("index2.html", graph1JSON=graph1JSON)
+
+@app.route("/results")
+@token_required
+def show_result(current_user):
+    db_sess = db_session.create_session()
+    results = db_sess.query(Result).filter(Result.user_id == current_user.id).all()
+    
+    tests_name = []
+
+    
+
+    for result in results:
+       tests_name.append(db_sess.query(Test).filter(Test.id == result.test_id).first().name)
+
+
+    # for test in tests:
+    #     for test1 in test:
+    #         print(test1.name)
+
+    return render_template("results.html", results=results, fio = current_user.fio, tests_name=tests_name)
+
+
+
+@app.route("/index")
+@app.route("/")
+@token_required
+def index(current_user):
+
+    return render_template('index.html', login=current_user.login, path_role=url_for('role'), path_poll=url_for('all_poll'))
+
+
 
 
 @ app.route("/auth")
@@ -259,25 +362,12 @@ def login():
         return res, 200
     return "Record not found", 400
 
-
-""" @app.route("/example")
-def about():
-    if checkAuth(request):
-        return render_template('example.html')
-    else:
-        return redirect("auth") """
-
-"""
-def checkAuth(request):
-    token = request.cookies.get('token')
-    # login = request.cookies.get('login')
-    # passwordHash = request.cookies.get('passwordHash')
-
-    # print(login, passwordHash)
-    if SearchLoginsAndPasswords(login,passwordHash) == True:
-        return True
-
-    return False """
+@app.route("/cabinet")
+@token_required
+def cabinet(current_user):
+    if current_user.role != Role.Admin.value:
+        return "У вас недостаточно прав."
+    return render_template('cabinet.html', fio=current_user.fio)
 
 
 if __name__ == '__main__':

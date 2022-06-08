@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
-
+    {% extends "main.html" %}
+    {% block content %}
+    
 <head>
     <!--<meta charset="utf-8"># -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
@@ -9,16 +11,17 @@
 </head>
 
 <body>
-    {% extends "main.html" %}
-    {% block content %}
-    
     <div>
-        <p>{{login}}</p>
-        <a href={{path_role}}>Изменить роли пользователям</a>
-        <br>
-        <a href={{path_poll}}>Опрос</a>
-    </div>
-    {% endblock %}
-</body>
+        {% for item in range(results|length) %}
+            {{tests_name[item]}}
+            {{results[item].score}}
+            {{results[item].date}}
+            <!-- {{item.score}} -->
+            <br>
 
+        {% endfor %}
+
+    </div>
+</body>
+    {% endblock %}
 </html>

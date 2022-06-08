@@ -1,3 +1,3 @@
 function Enter() {
-    alert("1337")
+    console.log(document.getElementById('answer1-2').checked)
 }

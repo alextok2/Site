@@ -5,29 +5,32 @@
         <title>Опрос</title>
     </head>
     <body>
-        <form method="POST" action="">
-            
-            {{fio}}
-            <h1>{{test}}</h1>
-            <div class="line"></div>
-            <br>
+        {% extends "main.html" %}
+        {% block content %}
 
-            {% for item in range(length) %}
-            
+        <form method="POST" action="">
+        <h1>{{test}}</h1>
+        <div class="line"></div>
+        <br>
+
+        {% for item in range(length) %}
+
                 <b>{{questions[item]}}</b>
                 <br>
-                {% for item1 in answers[item] %}
-                    <form>
-                        <input type="radio" >{{item1}}</input>
-                        <br>
-                    </form> 
-                {% endfor %}
                 
-            {% endfor %}
-            
-            <button onclick="Enter()">Принять</button>
-            
+                {% for item1 in answers[item] %}
+                    
+
+                    <input type="radio" name="answer{{item}}" id="answer" value="{{loop.index}}">  {{item1}}</input>
+                    <br>
+
+                {% endfor %}
+
+        {% endfor %}
+       
+            <button onclick="Enter()" id="action1" name="action1" value="VALUE1">Принять</button>
         </form>
         <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
+        {% endblock %}
     </body>
 </html>
