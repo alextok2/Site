@@ -6,9 +6,6 @@ from wtforms.validators import DataRequired
 
 
 
-class SubmitForm(FlaskForm):
-    submit = SubmitField("Принять")
-
 
 class GenerateTestForm(FlaskForm):
     questions = Label('', text="2")

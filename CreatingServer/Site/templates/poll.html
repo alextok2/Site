@@ -8,29 +8,46 @@
         {% extends "main.html" %}
         {% block content %}
 
-        <form method="POST" action="">
-        <h1>{{test}}</h1>
-        <div class="line"></div>
-        <br>
-
-        {% for item in range(length) %}
-
-                <b>{{questions[item]}}</b>
-                <br>
-                
-                {% for item1 in answers[item] %}
-                    
-
-                    <input type="radio" name="answer{{item}}" id="answer" value="{{loop.index}}">  {{item1}}</input>
+        <div class="modal-container" id="resultModal">
+            <div class="modal-window">
+                <div id="modalContent"> 
+                    <b>Балл</b> 
+                    5
                     <br>
+                    {{test}}
+                </div>
+                <a href="/" class="btn btn-warning" id="backBtn">На главную</a>
+            </div>
+        </div>
 
+            
+            <h1>{{test}}</h1>
+            <div class="line"></div>
+            <br>
+            
+            <div id="answers">
+                {% for item in range(length) %}
+    
+                        <b>{{questions[item]}}</b>
+                        <br>
+                        <div id="answer{{loop.index}}">
+                            {% for item1 in answers[item] %}
+                                
+        
+                                <input type="radio" name="answer{{item}}" id="answer-{{item}}" value="{{loop.index}}">  {{item1}}</input>
+                                <br>
+        
+                            {% endfor %}
+                        </div>
                 {% endfor %}
-
-        {% endfor %}
-       
-            <button onclick="Enter()" id="action1" name="action1" value="VALUE1">Принять</button>
-        </form>
-        <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
+            </div>
+        
+            <button onclick="Enter()">Принять</button>
+            
+            <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
+            
+            <input type="hidden" value="{{id}}" id="get_id">    
+            
         {% endblock %}
     </body>
 </html>

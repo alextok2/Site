@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+        <title>Опрос</title>
+    </head>
+    <body>
+        {% extends "main.html" %}
+        {% block content %}
+        <form method="POST" >
+            {{ form.hidden_tag() }}
+            <p>
+                {{form.name.label}}
+                {{form.name()}}
+            </p>
+            <p>
+                {{form.question.label}}
+                {{form.question()}}
+            </p>
+            <p class="padding_for_answers">
+                {{form.answer0.label}}
+                {{form.answer0()}}
+                {% if right_answer == 0%}
+                    <input type="radio" name="answer" id="answer-0" value="0" checked> </input>
+                {% else %}
+                    <input type="radio" name="answer" id="answer-0" value="0"> </input>
+                {% endif %}
+            </p>
+            <p class="padding_for_answers">
+                {{form.answer1.label}}
+                {{form.answer1()}}
+                {% if right_answer == 1%}
+                    <input type="radio" name="answer" id="answer-1" value="1" checked> </input>
+                {% else %}
+                    <input type="radio" name="answer" id="answer-1" value="1"> </input>
+                {% endif %}
+            </p >
+            <p class="padding_for_answers">
+                {{form.answer2.label}}
+                {{form.answer2()}}
+                {% if right_answer == 2%}
+                    <input type="radio" name="answer" id="answer-2" value="2" checked> </input>
+                {% else %}
+                    <input type="radio" name="answer" id="answer-2" value="2"> </input>
+                {% endif %}
+            </p>
+            <p class="padding_for_answers">
+                {{form.answer3.label}}
+                {{form.answer3()}}
+                {% if right_answer == 3%}
+                    <input type="radio" name="answer" id="answer-3" value="3" checked> </input>
+                {% else %}
+                    <input type="radio" name="answer" id="answer-3" value="3"> </input>
+                {% endif %}
+            </p>
+            <p >
+                
+                   
+                    {{form.previous()}}
+                    {{form.submit()}}
+                    {{form.next()}}
+                
+            </p>
+        </form>
+        {% endblock %}
+    </body>
+</html>

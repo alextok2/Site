@@ -1,4 +1,6 @@
 # from crypt import methods
+from multiprocessing.connection import answer_challenge
+import re
 from traceback import print_tb
 from jinja2 import Template
 from dataclasses import field
@@ -28,8 +30,9 @@ from data.results import Result
 from data.sessions import Session
 from data.tests import Test
 
-from forms.tests import GenerateTestForm, SubmitForm
+from forms.tests import GenerateTestForm
 from forms.roles import RoleForm
+from forms.new_tests import NewTestForm
 
 
 class Role(enum.Enum):
@@ -189,7 +192,6 @@ def all_poll(current_user):
 @app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
 @token_required
 def poll(current_user, id_test):
-
     db_sess = db_session.create_session()
     test = db_sess.query(Test).filter(Test.id == id_test).first()
 
@@ -197,27 +199,125 @@ def poll(current_user, id_test):
     text = test.answers
     answers_json = json.loads(text)
 
-    if request.method == 'POST':
-        score = 0
-        for i in range(len(answers_json['answers'])):
-
-            if int(request.form.get(f'answer{i}')) == answers_json['right_answers'][i]:
-                score += 1
-
-        results = round(score / test.max_score * 100)
-
-        result = Result()
-        result.test_id = id_test
-        result.user_id = current_user.id
-        result.score = results
-        result.date = datetime.datetime.utcnow()
-
-        db_sess.add(result)
-        db_sess.commit()
-        return redirect(url_for('show_dashboard_result'))
-
     return render_template('poll.html', test=test.name,
-                           answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']))
+                           answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']), id=id_test)
+    
+
+
+
+@app.route("/edit_test/<int:test_id>/<int:question_id>", methods=['GET', 'POST'])
+@token_required
+def edit_test(current_user, test_id, question_id):
+    if current_user.role != Role.Admin.value and current_user.role != Role.Curator.value:
+        return "У вас недостаточно прав."
+    
+    form = NewTestForm()
+
+    if request.method == "GET":
+        db_sess = db_session.create_session()
+        test = db_sess.query(Test).filter(Test.id == test_id).first()
+        if test:
+            form.name.data = test.name
+            questions = test.questions.split("%s")
+            form.question.data = questions[question_id]
+
+
+            text = test.answers
+            answers_json = json.loads(text)
+            answers = []
+            for answer in answers_json['answers']:
+                answers.append(answer)
+            
+            right_answer = answers_json['right_answers'][question_id] - 1
+            print(right_answer)
+
+            try:
+                form.answer0.data = answers[question_id][0]   
+                form.answer1.data = answers[question_id][1]
+                form.answer2.data = answers[question_id][2]
+                form.answer3.data = answers[question_id][3]
+            except IndexError:
+                pass
+
+            return render_template("edit_test.html", form=form, right_answer=right_answer)
+
+    if form.validate_on_submit():
+       
+        db_sess = db_session.create_session()
+        test = db_sess.query(Test).filter(Test.id == test_id).first()
+        questions = test.questions.split("%s")
+
+        questions[question_id] = form.question.data
+
+        new_questions = ""
+        for i in range(len(questions)):
+            new_questions += questions[i] + "%s"
+
+        test.questions = new_questions
+        test.name = form.name.data
+        db_sess.commit()
+
+
+
+
+        text = test.answers
+        answers_json = json.loads(text)
+        print(answers_json)
+        if form.answer0.data != '':
+            answers_json['answers'][question_id][0] = form.answer0.data
+
+
+
+
+
+
+        if form.answer3.data != '':
+            if len(answers_json['answers'][question_id]) > 3:
+                answers_json['answers'][question_id][3] = form.answer3.data
+            else:
+                answers_json['answers'][question_id].append(form.answer3.data)
+        else:
+            if len(answers_json['answers'][question_id]) > 3:
+                del answers_json['answers'][question_id][3]
+
+        if form.answer2.data != '':
+            if len(answers_json['answers'][question_id]) > 2:
+                answers_json['answers'][question_id][2] = form.answer2.data
+            else:
+                answers_json['answers'][question_id].append(form.answer2.data)
+        else:
+            if len(answers_json['answers'][question_id]) > 2:
+                    del answers_json['answers'][question_id][2]
+
+        if form.answer1.data != '':
+            if len(answers_json['answers'][question_id]) > 1:
+                answers_json['answers'][question_id][1] = form.answer1.data
+            else:
+                answers_json['answers'][question_id].append(form.answer1.data)
+        else:
+            if len(answers_json['answers'][question_id]) > 1:
+                    del answers_json['answers'][question_id][1]
+        
+        option = request.form.get('answer')
+        answers_json['right_answers'][question_id] = int(option)+1
+
+        print(json.dumps(answers_json))
+        test.answers = json.dumps(answers_json)
+        db_sess.commit()
+        
+        if form.previous.data:
+            if question_id > 0:
+                return redirect(url_for('edit_test', test_id=test_id, question_id=question_id-1))
+        if form.submit.data:
+            print(form.data)
+        if  form.next.data:
+            return redirect(url_for('edit_test', test_id=test_id, question_id=question_id+1))
+
+    return redirect(url_for('edit_test', test_id=test_id, question_id=question_id))
+
+    
+    
+
 
 
 @app.route("/dashboard")
@@ -286,6 +386,40 @@ def show_result(current_user):
 def index(current_user):
 
     return render_template('index.html', login=current_user.login, path_role=url_for('role'), path_poll=url_for('all_poll'))
+
+@app.route("/api/answer/<int:id_test>", methods=['POST'])
+@token_required
+def answer(current_user, id_test):
+
+    content = request.json
+
+
+    db_sess = db_session.create_session()
+    test = db_sess.query(Test).filter(Test.id == id_test).first()
+
+    text = test.answers
+    answers_json = json.loads(text)
+
+
+    score = 0
+    for i in range(len(answers_json['answers'])):
+
+        if (content['data'][i]+1) == answers_json['right_answers'][i]:
+            score += 1
+    
+    results = { "result" : round(score / test.max_score * 100)}
+
+    result = Result()
+    result.test_id = id_test
+    result.user_id = current_user.id
+    result.score = results
+    result.date = datetime.datetime.utcnow()
+
+    db_sess.add(result)
+    db_sess.commit()
+    jsonify(results)
+
+    return results
 
 
 @app.route("/api/sigh_out")
