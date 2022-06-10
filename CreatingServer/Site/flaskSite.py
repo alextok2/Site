@@ -266,11 +266,6 @@ def edit_test(current_user, test_id, question_id):
         if form.answer0.data != '':
             answers_json['answers'][question_id][0] = form.answer0.data
 
-
-
-
-
-
         if form.answer3.data != '':
             if len(answers_json['answers'][question_id]) > 3:
                 answers_json['answers'][question_id][3] = form.answer3.data
