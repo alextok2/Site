@@ -1,22 +1,61 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-        <title>Опрос</title>
-    </head>
-    <body>  
-        {% extends "main.html" %}
-        {% block content %}
-            <form method="POST" action="">
-                {{ form.hidden_tag() }}
-                <b>Логин</b>
-                {{user.login}}
 
-                <br>
-                <b>{{form.role.label}}</b>
-                {{form.role()}}
-                <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
-            </form>
-        {% endblock %}
-    </body>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Опрос</title>
+</head>
+
+<body>
+    {% extends "main.html" %}
+    {% block content %}
+
+    <div class="modal-container" id="resultModal">
+        <div class="modal-window">
+            <div id="modalContent">
+                контент
+            </div>
+            <button class="btn btn-warning" onclick="Close()" id="backBtn">Закрыть</button>
+            <!-- <a href="/" class="btn btn-warning" id="backBtn">Закрыть</a> -->
+        </div>
+    </div>
+
+
+
+    <p>
+        <b>Логин</b>
+        {{user.login}}
+    </p>
+    <p>
+        <b>ФИО</b>
+        {{user.fio}}
+    </p>
+    <p>
+
+
+        <b>Роль</b>
+        <select name="selectRole" id="selectRole">
+            {% if role == 0 %}
+            <option value="0" selected>Студент</option>
+            <option value="1">Преподаватель</option>
+            <option value="2">Админ</option>
+            {% elif role == 1 %}
+            <option value="0">Студент</option>
+            <option value="1" selected>Преподаватель</option>
+            <option value="2">Админ</option>
+            {% elif role == 2 %}
+            <option value="0">Студент</option>
+            <option value="1">Преподаватель</option>
+            <option value="2" selected>Админ</option>
+            {% endif %}
+            <input type="hidden" value="{{id}}" id="get_id">
+        </select>
+    </p>
+    <button class="btn btn-primary" onclick="Generate()">Сгенерировать новый пароль</button>
+    <button class="btn btn-primary" onclick="GetData()">Принять</button>
+
+    {% endblock %}
+    <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
+</body>
+
 </html>

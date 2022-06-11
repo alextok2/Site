@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Опрос</title>
+</head>
+
+<body>
+    <div class="modal-container" id="resultModal">
+        <div class="modal-window">
+            <div id="modalContent">
+                контент
+            </div>
+            <button class="btn btn-warning" onclick="Close()" id="backBtn">Закрыть</button>
+            <!-- <a href="/" class="btn btn-warning" id="backBtn">Закрыть</a> -->
+        </div>
+    </div>
+
+
+    {% extends "main.html" %}
+    {% block content %}
+    <p>
+        <b>ФИО</b>
+        <input id="fio" type="text" required>
+    </p>
+    <b>Роль</b>
+    <select name="selectRole" id="selectRole">
+        <option value="0" selected>Студент</option>
+        <option value="1">Преподаватель</option>
+        <option value="2">Админ</option>
+    </select>
+
+    <br>
+    <b>Группа</b>
+    <select name="selectGroup" id="selectGroup">
+        {% for %}
+        <option value="0" selected>Студент</option>
+
+    </select>
+    <p>
+        <button class="btn btn-primary" onclick="CreateUser()">Создать</button>
+    </p>
+
+
+    {% endblock %}
+    <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
+</body>
+
+</html>

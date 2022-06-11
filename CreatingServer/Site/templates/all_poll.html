@@ -11,10 +11,21 @@
 <body>
     {% extends "main.html" %}
     {% block content %}
-    
+
     <div>
+        {% if isEditable == True%}
+        <a href="\api\create_new_test" class="btn btn-warning">
+            Создать новый тест
+        </a>
+        <br>
+        {% endif %}
         {% for id, value in test_name %}
         <a href="poll\{{id}}">{{value}}</a>
+        {% if isEditable == True%}
+        <a href="edit_test\{{id}}\0" class="btn btn-warning">
+            Изменить
+        </a>
+        {% endif %}
         <br>
         {% endfor %}
 

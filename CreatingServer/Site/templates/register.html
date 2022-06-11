@@ -9,16 +9,16 @@
         <img src="{{ url_for('static', filename='images/register.gif') }}">
         <div>
             <h3 style="display: inline-block;">Введите ФИО</h3>
-            <input id="name" type="text" value="Tom">
+            <input id="name" type="text">
         </div>
         <div>
             <h3 style="display: inline-block;">Введите логин</h3>
-            <input id="login" type="text" value="tom2004" oninput="checkLoginExists()">
+            <input id="login" type="text" oninput="checkLoginExists()">
             <div class="loginIndicator"></div>
         </div>
         <div>
             <h3 style="display: inline-block;">Введите пароль</h3>
-            <input id="password" type="text" value="1Qwertyu" oninput="checkPassword()">
+            <input id="password" type="text" oninput="checkPassword()">
             <div class="passwordIndicator"></div>
             <div class="message-box" id="message"></div>
         </div>

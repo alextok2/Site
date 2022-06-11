@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Группы</title>
+</head>
+
+<body>
+
+
+    {% extends "main.html" %}
+    {% block content %}
+    <p>
+        <b>Группа</b>
+        <input id="group" type="text" required>
+    </p>
+    <b>Преподаватель</b>
+    <select name="select_curator" id="select_curator">
+        {% for key, value in curators_fio.items() %}
+        <option value="{{key}}">{{value}}-{{key}}</option>
+        {% endfor %}
+    </select>
+    <p>
+        <button class="btn btn-primary" onclick="CreateGroup()">Создать</button>
+    </p>
+
+
+    {% endblock %}
+    <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
+</body>
+
+</html>

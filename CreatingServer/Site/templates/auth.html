@@ -1,24 +1,26 @@
 <html>
-    <head>   
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    </head>
-    <body>
-        <div class="main-container">
-            <img src="{{ url_for('static', filename='images/auth.gif') }}">
-            <div class="item">
-                <h3 style="display: inline-block;">Логин</h3>
-                <input id="login" type="text" value="tom2004">
-            </div>
-            <div class="item">
-                <h3 style="display: inline-block;">Пароль</h3>
-                <input id="password" type="text" value="1Qwertyu">
-            </div>
-            <button onclick="doLogin()">Залогиниться</button>
-            <div>
-                <a href="/register">Зарегистроваться</a>
-            </div>
+
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+
+<body>
+    <div class="main-container">
+        <img src="{{ url_for('static', filename='images/auth.gif') }}">
+        <div class="item">
+            <h3 style="display: inline-block;">Логин</h3>
+            <input id="login" type="text">
         </div>
-        <script src="{{ url_for('static', filename='script/script.js') }}"></script>
-    </body>
+        <div class="item">
+            <h3 style="display: inline-block;">Пароль</h3>
+            <input id="password" type="text">
+        </div>
+        <button onclick="doLogin()">Залогиниться</button>
+        <div>
+            <a href="/register">Зарегистроваться</a>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script/script.js') }}"></script>
+</body>
 
 </html>

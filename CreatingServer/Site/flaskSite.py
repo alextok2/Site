@@ -35,6 +35,9 @@ from forms.roles import RoleForm
 from forms.new_tests import NewTestForm
 
 
+from resourses.generate import generate_password, generate_login
+
+
 class Role(enum.Enum):
     Student = 0
     Curator = 1
@@ -48,8 +51,10 @@ print(file_path)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "8f42a73054b1749f8f58848be5e6502c"
-app.config['ADDRESS'] = "127.0.0.1"
+app.config['ADDRESS'] = "0.0.0.0"
 app.config['PORT'] = "5000"
+
+# Логин: I.Romanova Пароль: uNq6jxPu
 
 
 def token_required(f):
@@ -75,12 +80,6 @@ def token_required(f):
         return f(current_user, *args, **kwargs)
 
     return decorated
-
-
-def clear_token():
-    token = request.cookies.get('token')
-    print(token)
-    # print(current_user.fio)
 
 
 def SearchLoginsAndPasswords(search_login, search_hash):
@@ -130,12 +129,11 @@ def CreateNewPerson(new_login, new_fio, new_password):
 def role(current_user):
     db_sess = db_session.create_session()
 
-    if current_user.role == Role.Admin.value:
-
-        user = db_sess.query(User)
-        return render_template('role.html', user=user, roles=roles)
-    else:
+    if current_user.role != Role.Admin.value:
         return "У вас недостаточно прав."
+    user = db_sess.query(User)
+    return render_template('role.html', user=user, roles=roles)
+
 
 @app.route("/create_user")
 @token_required
@@ -149,6 +147,7 @@ def create_user(current_user):
     print(user.id)
     return redirect(url_for("edit_role", id=user.id))
 
+
 @app.route("/role/<int:id>", methods=['GET', 'POST'])
 @token_required
 def edit_role(current_user, id):
@@ -158,23 +157,29 @@ def edit_role(current_user, id):
 
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == id).first()
-    form = RoleForm(role=user.role)
+    # form = RoleForm(role=user.role)
+    role = user.role
+    print(role)
+    # form.role.choices = [(i, roles[i]) for i in range(len(Role))]
 
-    form.role.choices = [(i, roles[i]) for i in range(len(Role))]
+    # if form.validate_on_submit():
 
-    if form.validate_on_submit():
+    #     if form.submit.data:
+    #         user.role = form.role.data
+    #         print(form.role.data)
+    #         db_sess.commit()
 
-        user.role = form.role.data
-        print(form.role.data)
-        db_sess.commit()
-
-        return redirect(url_for('role'))
-    return render_template('edit_role.html', user=user, form=form)
+    #         return redirect(url_for('role'))
+    # form=form)
+    return render_template('edit_role.html', user=user, role=role, id=id)
 
 
 @app.route("/poll")
 @token_required
 def all_poll(current_user):
+    isEditable = True
+    if current_user.role != Role.Admin.value and current_user.role != Role.Curator.value:
+        isEditable = False
     db_sess = db_session.create_session()
     tests = db_sess.query(Test).all()
 
@@ -186,7 +191,7 @@ def all_poll(current_user):
         test_name.append((i, test.name))
         i += 1
 
-    return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"))
+    return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"), isEditable=isEditable)
 
 
 @app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
@@ -201,8 +206,6 @@ def poll(current_user, id_test):
 
     return render_template('poll.html', test=test.name,
                            answers=answers_json['answers'], questions=questions, length=len(answers_json['answers']), id=id_test)
-    
-
 
 
 @app.route("/edit_test/<int:test_id>/<int:question_id>", methods=['GET', 'POST'])
@@ -210,7 +213,7 @@ def poll(current_user, id_test):
 def edit_test(current_user, test_id, question_id):
     if current_user.role != Role.Admin.value and current_user.role != Role.Curator.value:
         return "У вас недостаточно прав."
-    
+
     form = NewTestForm()
 
     if request.method == "GET":
@@ -219,100 +222,146 @@ def edit_test(current_user, test_id, question_id):
         if test:
             form.name.data = test.name
             questions = test.questions.split("%s")
-            form.question.data = questions[question_id]
-
-
             text = test.answers
             answers_json = json.loads(text)
-            answers = []
-            for answer in answers_json['answers']:
-                answers.append(answer)
-            
-            right_answer = answers_json['right_answers'][question_id] - 1
-            print(right_answer)
+            print(len(questions))
+            if len(answers_json['right_answers']) < question_id+1:
+                right_answer = 0
 
-            try:
-                form.answer0.data = answers[question_id][0]   
-                form.answer1.data = answers[question_id][1]
-                form.answer2.data = answers[question_id][2]
-                form.answer3.data = answers[question_id][3]
-            except IndexError:
-                pass
+            else:
+
+                form.question.data = questions[question_id]
+
+                text = test.answers
+                answers_json = json.loads(text)
+                answers = []
+                for answer in answers_json['answers']:
+                    answers.append(answer)
+
+                right_answer = answers_json['right_answers'][question_id] - 1
+                print(right_answer)
+
+                try:
+                    form.answer0.data = answers[question_id][0]
+                    form.answer1.data = answers[question_id][1]
+                    form.answer2.data = answers[question_id][2]
+                    form.answer3.data = answers[question_id][3]
+                except IndexError:
+                    pass
 
             return render_template("edit_test.html", form=form, right_answer=right_answer)
 
     if form.validate_on_submit():
-       
+
         db_sess = db_session.create_session()
         test = db_sess.query(Test).filter(Test.id == test_id).first()
         questions = test.questions.split("%s")
 
+        text = test.answers
+        answers_json = json.loads(text)
+        print(len(questions))
+        if len(questions) < question_id+1:
+            questions.append("")
+            answers_json["answers"].append(["1", "2"])
+            answers_json['right_answers'].append(1)
+
+            print(answers_json)
+
         questions[question_id] = form.question.data
 
         new_questions = ""
-        for i in range(len(questions)):
+        for i in range(len(questions) - 1):
             new_questions += questions[i] + "%s"
 
-        test.questions = new_questions
-        test.name = form.name.data
-        db_sess.commit()
+        new_questions += questions[-1]
 
-
-
-
-        text = test.answers
-        answers_json = json.loads(text)
-        print(answers_json)
         if form.answer0.data != '':
             answers_json['answers'][question_id][0] = form.answer0.data
 
-        if form.answer3.data != '':
-            if len(answers_json['answers'][question_id]) > 3:
-                answers_json['answers'][question_id][3] = form.answer3.data
-            else:
-                answers_json['answers'][question_id].append(form.answer3.data)
-        else:
-            if len(answers_json['answers'][question_id]) > 3:
-                del answers_json['answers'][question_id][3]
+        if form.answer1.data != '':
+            answers_json['answers'][question_id][1] = form.answer1.data
+
+        print(answers_json)
 
         if form.answer2.data != '':
             if len(answers_json['answers'][question_id]) > 2:
                 answers_json['answers'][question_id][2] = form.answer2.data
             else:
-                answers_json['answers'][question_id].append(form.answer2.data)
+                answers_json['answers'][question_id].insert(
+                    2, form.answer2.data)
         else:
             if len(answers_json['answers'][question_id]) > 2:
+                del answers_json['answers'][question_id][2]
+
+        print(answers_json)
+
+        if form.answer3.data != '':
+            if len(answers_json['answers'][question_id]) > 3:
+                answers_json['answers'][question_id][3] = form.answer3.data
+
+            else:
+                answers_json['answers'][question_id].insert(
+                    3, form.answer3.data)
+        else:
+            if len(answers_json['answers'][question_id]) > 3:
+                if len(answers_json['answers'][question_id]) > 2:
+                    del answers_json['answers'][question_id][3]
+                else:
                     del answers_json['answers'][question_id][2]
 
-        if form.answer1.data != '':
-            if len(answers_json['answers'][question_id]) > 1:
-                answers_json['answers'][question_id][1] = form.answer1.data
-            else:
-                answers_json['answers'][question_id].append(form.answer1.data)
-        else:
-            if len(answers_json['answers'][question_id]) > 1:
-                    del answers_json['answers'][question_id][1]
-        
         option = request.form.get('answer')
         answers_json['right_answers'][question_id] = int(option)+1
 
         print(json.dumps(answers_json))
         test.answers = json.dumps(answers_json)
+        test.questions = new_questions
+        test.name = form.name.data
+        test.max_score = len(questions)
         db_sess.commit()
-        
+
         if form.previous.data:
             if question_id > 0:
                 return redirect(url_for('edit_test', test_id=test_id, question_id=question_id-1))
         if form.submit.data:
-            print(form.data)
-        if  form.next.data:
+            return redirect(url_for('all_poll'))
+        if form.next.data:
             return redirect(url_for('edit_test', test_id=test_id, question_id=question_id+1))
 
     return redirect(url_for('edit_test', test_id=test_id, question_id=question_id))
 
-    
-    
 
+@app.route("/api/create_password", methods=['POST'])
+@token_required
+def create_password(current_user):
+
+    password = generate_password()
+    print("password", password)
+    response = {
+        "password": password
+    }
+
+    return jsonify(response)
+
+
+@app.route("/api/create_new_test")
+@token_required
+def create_new_test(current_user):
+    db_sess = db_session.create_session()
+    test = db_sess.query(Test).order_by(Test.id.desc()).first()
+    test_id = test.id + 1
+    question_id = 0
+
+    test = Test()
+    test.questions = "1"
+    answers = {"answers": [["1", "2"]], "right_answers": [1]}
+    test.answers = json.dumps(answers)
+    test.name = ""
+    test.max_score = 1
+
+    db_sess.add(test)
+    db_sess.commit()
+
+    return redirect(url_for('edit_test', test_id=test_id, question_id=question_id))
 
 
 @app.route("/dashboard")
@@ -349,10 +398,54 @@ def show_dashboard_result(current_user):
                 if x_best[k] < x[j]:
                     x_best[k] = x[j]
 
-    fig1 = px.bar(y=y_key, x=x_best, labels=dict(x="Оценки", y="Дисциплины", color="Place"))
+    fig1 = px.bar(y=y_key, x=x_best, labels=dict(
+        x="Оценки", y="Дисциплины", color="Place"))
     graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template("index2.html", graph1JSON=graph1JSON)
+
+
+@app.route("/new_user")
+@token_required
+def new_user(current_user):
+    if current_user.role != Role.Admin.value:
+        return "У вас недостаточно прав."
+
+    db_sess = db_session.create_session()
+    Groups = db_sess.query(Group).all()
+
+    return render_template("new_user.html", groups=Groups)
+
+
+@app.route("/api/new_user", methods=['POST'])
+@token_required
+def create_new_user(current_user):
+    content = request.json
+    fio = content['fio']
+    fio_splited = fio.split()
+    role = content['role']
+    print(fio, role)
+    login = generate_login(
+        first_name=fio_splited[1], second_name=fio_splited[0])
+    password = generate_password()
+    hashed_password = hashlib.md5(password.encode('UTF-8')).hexdigest()
+    response = {
+        "password": password,
+        'login': login
+    }
+
+    user = User()
+    user.fio = fio
+    user.login = login
+    user.password = hashed_password
+    user.role = role
+    user.group_id = 1
+
+    with db_session.create_session() as db_sess:
+        db_sess.add(user)
+        db_sess.commit()
+
+    return jsonify(response)
 
 
 @app.route("/results")
@@ -382,12 +475,29 @@ def index(current_user):
 
     return render_template('index.html', login=current_user.login, path_role=url_for('role'), path_poll=url_for('all_poll'))
 
+
+@app.route("/api/edit_role/<int:id_user>", methods=['POST'])
+@token_required
+def new_role(current_user, id_user):
+    content = request.json
+    password = content['password']
+    role = content['role']
+
+    db_sess = db_session.create_session()
+    user = db_sess.query(User).filter(User.id == id_user).first()
+    user.role = role
+    user.password = password
+
+    db_sess.commit()
+    print(password, role)
+    return "Success", 200
+
+
 @app.route("/api/answer/<int:id_test>", methods=['POST'])
 @token_required
 def answer(current_user, id_test):
 
     content = request.json
-
 
     db_sess = db_session.create_session()
     test = db_sess.query(Test).filter(Test.id == id_test).first()
@@ -395,19 +505,18 @@ def answer(current_user, id_test):
     text = test.answers
     answers_json = json.loads(text)
 
-
     score = 0
     for i in range(len(answers_json['answers'])):
 
         if (content['data'][i]+1) == answers_json['right_answers'][i]:
             score += 1
-    
-    results = { "result" : round(score / test.max_score * 100)}
+
+    results = {"result": round(score / test.max_score * 100)}
 
     result = Result()
     result.test_id = id_test
     result.user_id = current_user.id
-    result.score = results
+    result.score = round(score / test.max_score * 100)
     result.date = datetime.datetime.utcnow()
 
     db_sess.add(result)
@@ -417,8 +526,8 @@ def answer(current_user, id_test):
     return results
 
 
-@app.route("/api/sigh_out")
-@token_required
+@ app.route("/api/sigh_out")
+@ token_required
 def sigh_out(current_user):
     print(current_user.id)
     db_sess = db_session.create_session()
@@ -427,6 +536,7 @@ def sigh_out(current_user):
     res = make_response(redirect(url_for("auth")))
     res.set_cookie('token', "", expires=0)
     return res
+
 
 @ app.route("/auth")
 def auth():
@@ -501,10 +611,77 @@ def login():
     return "Record not found", 400
 
 
-@app.route("/cabinet")
-@token_required
+@ app.route("/cabinet")
+@ token_required
 def cabinet(current_user):
-    return render_template('cabinet.html', fio=current_user.fio)
+    is_admin = True
+    if current_user.role != Role.Admin.value:
+        is_admin = False
+    return render_template('cabinet.html', fio=current_user.fio, is_admin=is_admin)
+
+
+@app.route("/new_group")
+@token_required
+def new_group(current_user):
+    db_sess = db_session.create_session()
+
+    curators = db_sess.query(User).filter(User.role == 1).all()
+
+    curators_fio = {}
+
+    for curator in curators:
+        curators_fio[f'{curator.id}'] = f'{curator.fio}'
+
+    return render_template("groups.html", curators_fio=curators_fio)
+
+
+@app.route("/group")
+@token_required
+def group(current_user):
+    db_sess = db_session.create_session()
+
+    if current_user.role != Role.Admin.value:
+        return "У вас недостаточно прав."
+
+    groups = db_sess.query(Group)
+
+    # curators = []
+
+    # for i in groups:
+    #     curators.append(db_sess.query(User).filter() )
+
+    return render_template('all_groups.html', groups=groups)
+
+
+@app.route("/api/new_group", methods=['POST'])
+@token_required
+def create_new_group(current_user):
+    content = request.json
+    group_json = content['group']
+    curator = content['curator']
+
+    groups = Group()
+
+    groups.name = group_json
+    groups.user_id = curator
+
+    print(groups.name, groups.user_id)
+
+    db_sess = db_session.create_session()
+    db_sess.add(groups)
+    db_sess.commit()
+
+    # user = User()
+    # user.fio = fio
+    # user.login = login
+    # user.password = hashed_password
+    # user.role = role
+
+    # with db_session.create_session() as db_sess:
+    #     db_sess.add(user)
+    #     db_sess.commit()
+
+    return "Success", 200
 
 
 if __name__ == '__main__':
@@ -521,5 +698,5 @@ if __name__ == '__main__':
     # db_sess = db_session.create_session()
 
     # , ssl_context=('CreatingServer/Site/resourses/cert.pem', 'CreatingServer/Site/resourses/key.pem'))
-    app.jinja_env.globals.update(clear_token=clear_token)
+    # app.jinja_env.globals.update(clear_token=clear_token)
     app.run(debug=True, host=app.config["ADDRESS"], port=app.config['PORT'])

@@ -9,16 +9,17 @@
     {% extends "main.html" %}
     {% block content %}
 
-    <a href="/new_user" class="btn btn-warning">
-        Добавить нового пользователям
+    <a href="/new_group" class="btn btn-warning">
+        Добавить новую группу
     </a>
     <br>
     <br>
-    {% for item in user %}
-    <b>{{item.login}}</b>
+    {% for item in groups %}
+    <b>{{item.name}}</b>
 
-    <b>{{roles[item.role]}}</b>
-    <a href="/role/{{ item.id }}" class="btn btn-warning">
+
+
+    <a href="/group/{{ item.id }}" class="btn btn-warning">
         Изменить
     </a>
 
