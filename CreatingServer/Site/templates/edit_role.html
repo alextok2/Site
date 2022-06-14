@@ -31,19 +31,31 @@
         {{user.fio}}
     </p>
     <p>
+        <b>Группа</b>
+        <select name="selectGroup" id="selectGroup">
+            {% for item in groups %}
+            {% if group.id == item.id %}
+            <option value="{{loop.index}}" selected>{{item.name}}</option>
+            {% else %}
+            <option value="{{loop.index}}">{{item.name}}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+    </p>
+    <p>
 
 
         <b>Роль</b>
         <select name="selectRole" id="selectRole">
-            {% if role == 0 %}
+            {% if user.role == 0 %}
             <option value="0" selected>Студент</option>
             <option value="1">Преподаватель</option>
             <option value="2">Админ</option>
-            {% elif role == 1 %}
+            {% elif user.role == 1 %}
             <option value="0">Студент</option>
             <option value="1" selected>Преподаватель</option>
             <option value="2">Админ</option>
-            {% elif role == 2 %}
+            {% elif user.role == 2 %}
             <option value="0">Студент</option>
             <option value="1">Преподаватель</option>
             <option value="2" selected>Админ</option>

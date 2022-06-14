@@ -55,6 +55,22 @@ app.config['ADDRESS'] = "0.0.0.0"
 app.config['PORT'] = "5000"
 
 # Логин: I.Romanova Пароль: uNq6jxPu
+# Логин: B.Erushev Пароль: 8Xwllv6B
+# Логин: D.Ahmet'janov Пароль: *!e1KxEv
+# Логин: I.Borisenko Пароль: EDhzzVuR
+# Логин: V.Golikova Пароль: Tb1>2aFv
+# Логин: O.Kazakov Пароль: cMazxJ-p
+# Логин: Ju.Kul'evich Пароль: R/5Cx*s6
+# Логин: D.Podshivalov Пароль: Z0eHIg-Y
+# Логин: M.Pushenko Пароль: kqK7+WH*
+# Логин: D.Savchenko Пароль: hljB4hzV
+# Логин: A.Tegaj Пароль: ybga6r0A
+# Логин: E.Fahretdinov Пароль: w8HECfdg
+# Логин: A.Fedorova Пароль: AUG5RIou
+# Логин: I.Hajbullin Пароль: zvHeC$MX
+# Логин: D.Chanysheva Пароль: N!WVb-Ep
+# Логин: S.Shumilov Пароль: P*3tHsA9
+# Логин: A.Tokarev Пароль: JMMAxd7F
 
 
 def token_required(f):
@@ -157,9 +173,10 @@ def edit_role(current_user, id):
 
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == id).first()
+
+    group = db_sess.query(Group).filter(Group.id == user.group_id).first()
+    groups = db_sess.query(Group).all()
     # form = RoleForm(role=user.role)
-    role = user.role
-    print(role)
     # form.role.choices = [(i, roles[i]) for i in range(len(Role))]
 
     # if form.validate_on_submit():
@@ -171,7 +188,7 @@ def edit_role(current_user, id):
 
     #         return redirect(url_for('role'))
     # form=form)
-    return render_template('edit_role.html', user=user, role=role, id=id)
+    return render_template('edit_role.html', user=user, group=group, groups=groups, id=id)
 
 
 @app.route("/poll")
@@ -356,7 +373,7 @@ def create_new_test(current_user):
 
     test = Test()
     test.questions = "1"
-    answers = {"answers": [["1", "2"]], "right_answers": [1]}
+    answers = {"answers": [[" ", " "]], "right_answers": [1]}
     test.answers = json.dumps(answers)
     test.name = ""
     test.max_score = 1
@@ -370,42 +387,59 @@ def create_new_test(current_user):
 @app.route("/dashboard")
 @token_required
 def show_dashboard_result(current_user):
+    if current_user.role == Role.Curator.value:
+        db_sess = db_session.create_session()
+        users = db_sess.query(User).filter(
+            User.group_id == current_user.group_id).all()
+        if user in users:
+            results = db_sess.query(Result).filter(
+                Result.user_id == user.id).all()
 
-    db_sess = db_session.create_session()
-    results = db_sess.query(Result).filter(
-        Result.user_id == current_user.id).all()
+        tests_name = []
 
-    y = []
-    x = []
-    for result in results:
-        x.append(result.score)
-        y.append(db_sess.query(Test).filter(
-            Test.id == result.test_id).first().name)
+        for result in results:
+            tests_name.append(db_sess.query(Test).filter(
+                Test.id == result.test_id).first().name)
 
-    if not x or not y:
-        return redirect(url_for("all_poll"))
+        return render_template("results.html", results=results, fio=current_user.fio, tests_name=tests_name)
 
-    x_best = []
-    y_key = list(set(y))
+    elif current_user.role == Role.Student.value:
+        db_sess = db_session.create_session()
+        results = db_sess.query(Result).filter(
+            Result.user_id == current_user.id).all()
 
-    old_i = None
-    k = -1
-    for i in y_key:
-        for j in range(len(y)):
-            if y[j] == i:
-                if old_i != i:
-                    x_best.append(x[j])
-                    old_i = i
-                    k += 1
+        y = []
+        x = []
+        for result in results:
+            x.append(result.score)
+            y.append(db_sess.query(Test).filter(
+                Test.id == result.test_id).first().name)
 
-                if x_best[k] < x[j]:
-                    x_best[k] = x[j]
+        if not x or not y:
+            return redirect(url_for("all_poll"))
 
-    fig1 = px.bar(y=y_key, x=x_best, labels=dict(
-        x="Оценки", y="Дисциплины", color="Place"))
-    graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
+        x_best = []
+        y_key = list(set(y))
 
-    return render_template("index2.html", graph1JSON=graph1JSON)
+        old_i = None
+        k = -1
+        for i in y_key:
+            for j in range(len(y)):
+                if y[j] == i:
+                    if old_i != i:
+                        x_best.append(x[j])
+                        old_i = i
+                        k += 1
+
+                    if x_best[k] < x[j]:
+                        x_best[k] = x[j]
+
+        fig1 = px.bar(y=y_key, x=x_best, labels=dict(
+            x="Оценки", y="Дисциплины", color="Place"))
+        graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
+
+        return render_template("index2.html", graph1JSON=graph1JSON)
+    return redirect("index")
 
 
 @app.route("/new_user")
@@ -427,9 +461,12 @@ def create_new_user(current_user):
     fio = content['fio']
     fio_splited = fio.split()
     role = content['role']
+    group = content['group']
     print(fio, role)
     login = generate_login(
         first_name=fio_splited[1], second_name=fio_splited[0])
+    # if ThereIsLoginsDublicats(login):
+
     password = generate_password()
     hashed_password = hashlib.md5(password.encode('UTF-8')).hexdigest()
     response = {
@@ -442,33 +479,13 @@ def create_new_user(current_user):
     user.login = login
     user.password = hashed_password
     user.role = role
-    user.group_id = 1
+    user.group_id = group
 
     with db_session.create_session() as db_sess:
         db_sess.add(user)
         db_sess.commit()
 
     return jsonify(response)
-
-
-@app.route("/results")
-@token_required
-def show_result(current_user):
-    db_sess = db_session.create_session()
-    results = db_sess.query(Result).filter(
-        Result.user_id == current_user.id).all()
-
-    tests_name = []
-
-    for result in results:
-        tests_name.append(db_sess.query(Test).filter(
-            Test.id == result.test_id).first().name)
-
-    # for test in tests:
-    #     for test1 in test:
-    #         print(test1.name)
-
-    return render_template("results.html", results=results, fio=current_user.fio, tests_name=tests_name)
 
 
 @app.route("/index")
@@ -485,11 +502,13 @@ def new_role(current_user, id_user):
     content = request.json
     password = content['password']
     role = content['role']
+    group = content['group']
 
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == id_user).first()
     user.role = role
     user.password = password
+    user.group_id = group
 
     db_sess.commit()
     print(password, role)

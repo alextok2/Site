@@ -99,9 +99,9 @@ function Generate() {
 
 
 function GetData() {
-
+    let selectGroup = document.getElementById('selectGroup')
     let select_data = document.getElementById('selectRole')
-    console.log(select_data.value + "  " + password)
+    console.log(selectGroup.value)
 
     id = document.getElementById("get_id").value
 
@@ -109,7 +109,8 @@ function GetData() {
 
     let request = {
         "role": select_data.value,
-        "password": MD5(password)
+        "password": MD5(password),
+        "group": selectGroup.value
     }
     // console.log(window.location.origin)
     // console.log(url)
@@ -140,19 +141,24 @@ function Close() {
 
 function CreateUser() {
     let select_data = document.getElementById('selectRole')
-    let resultModal = document.getElementById('resultModal');
+    let resultModal = document.getElementById('resultModal')
+    let selectGroup = document.getElementById('selectGroup')
+    // console.log(selectGroup.value)
     resultModal.style.display = 'flex';
     fio = document.getElementById("fio")
+
 
 
     let url = new URL(window.location.origin + `/api/new_user`)
 
     let request = {
         "fio": fio.value,
-        "role": select_data.value
+        "role": select_data.value,
+        "group": selectGroup.value
     }
     // console.log(window.location.origin)
-    // console.log(url)
+
+
     fetch(url, {
         method: 'POST',
         headers: {
@@ -172,6 +178,7 @@ function CreateUser() {
 
 function CreateGroup() {
     let select_data = document.getElementById('select_curator')
+
     group = document.getElementById("group")
 
 
@@ -180,6 +187,7 @@ function CreateGroup() {
     let request = {
         "group": group.value,
         "curator": select_data.value
+
     }
     // console.log(window.location.origin)
     // console.log(url)

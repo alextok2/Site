@@ -21,7 +21,7 @@ class NewTestForm(FlaskForm):
 
     # create_new_answer = SubmitField("Создать новый ответ")
     previous = SubmitField('Предыдущий вопрос')
-    submit = SubmitField('Завершить')
+    submit = SubmitField('Сохранить')
     next = SubmitField('Следующий')
 
     # option1 = BooleanField('label')

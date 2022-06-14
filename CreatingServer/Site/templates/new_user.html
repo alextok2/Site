@@ -34,9 +34,9 @@
     <br>
     <b>Группа</b>
     <select name="selectGroup" id="selectGroup">
-        {% for %}
-        <option value="0" selected>Студент</option>
-
+        {% for group in groups %}
+        <option value="{{loop.index}}">{{group.name}}</option>
+        {% endfor %}
     </select>
     <p>
         <button class="btn btn-primary" onclick="CreateUser()">Создать</button>
