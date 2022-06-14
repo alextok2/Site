@@ -348,7 +348,10 @@ def create_password(current_user):
 def create_new_test(current_user):
     db_sess = db_session.create_session()
     test = db_sess.query(Test).order_by(Test.id.desc()).first()
-    test_id = test.id + 1
+    if test:
+        test_id = test.id + 1
+    else:
+        test_id = 1
     question_id = 0
 
     test = Test()
