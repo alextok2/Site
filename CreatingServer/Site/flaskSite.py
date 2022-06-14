@@ -200,15 +200,19 @@ def all_poll(current_user):
     db_sess = db_session.create_session()
     tests = db_sess.query(Test).all()
 
+    group_user=db_sess.query(Group).filter(Group.id == current_user.group_id).first()
+
     # print(tests.name)
     i = 1
     test_name = []
     for test in tests:
-
-        test_name.append((i, test.name))
+        user = db_sess.query(User).filter(User.id == test.user_id).first()
+        group=db_sess.query(Group).filter(Group.id == user.group_id).first()
+        
+        test_name.append((i, test.name, group.id))
         i += 1
 
-    return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"), isEditable=isEditable)
+    return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"), isEditable=isEditable, group=group_user)
 
 
 @app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
@@ -372,11 +376,12 @@ def create_new_test(current_user):
     question_id = 0
 
     test = Test()
-    test.questions = "1"
+    test.questions = " "
     answers = {"answers": [[" ", " "]], "right_answers": [1]}
     test.answers = json.dumps(answers)
     test.name = ""
     test.max_score = 1
+    test.user_id = current_user.id
 
     db_sess.add(test)
     db_sess.commit()
@@ -639,7 +644,9 @@ def cabinet(current_user):
     is_admin = True
     if current_user.role != Role.Admin.value:
         is_admin = False
-    return render_template('cabinet.html', fio=current_user.fio, is_admin=is_admin)
+    db_sess = db_session.create_session()
+    group = db_sess.query(Group).filter(Group.id == current_user.group_id).first()
+    return render_template('cabinet.html', fio=current_user.fio, is_admin=is_admin, group=group)
 
 
 @app.route("/new_group")

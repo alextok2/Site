@@ -207,3 +207,63 @@ function CreateGroup() {
         alert(error)
     });
 }
+var deleted = []
+function Filter(){
+    let input = document.getElementById('checkbox_filter')
+    // let polls = document.getElementsByName("poll");
+    // let edits = document.getElementsByName("edit");
+    let ps = document.getElementsByName("poll_p");
+    let polls = document.getElementById("polls")
+    
+    console.log(deleted)
+    
+    
+    if(input.checked){
+        for (let i = 0; i < ps.length; i++) {
+            
+            if (ps[i].id != Number(input.value)){
+                deleted.push(ps[i])
+            }
+        } 
+        for (let i = 0; i < ps.length; i++){
+            for (let j = 0; j < deleted.length; j++){
+                if (ps[i] == deleted[j]){
+                    ps[i].remove()
+                }
+            }
+        }
+    }
+
+    else{
+        for (let i = 0; i < deleted.length; i++) {
+            polls.appendChild(deleted[i])
+            console.log(1)
+        }
+    }
+
+     
+    // polls.forEach(element =>{
+
+    //     if (element.id != Number(input.value)){
+    //         if(input.checked){
+    //             element.style.visibility = "hidden"
+    //         }
+    //         else{
+    //             element.style.visibility = "visible"
+    //         }
+    //     }
+    //     });
+
+    // edits.forEach(element =>{
+    //     if (element.id != Number(input.value)){
+    //         if(input.checked){
+    //             element.style.visibility = "hidden"
+    //         }
+    //         else{
+    //             element.style.visibility = "visible"
+    //         }
+    //     }
+        
+    //     });
+    
+}

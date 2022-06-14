@@ -13,24 +13,29 @@
     {% block content %}
 
     <div>
+        <p>
+            <input type="checkbox" name="" id="checkbox_filter" value="{{group.id}}" onclick="Filter()" >  Только тесты для {{group.name}}</input>
+        </p>
         {% if isEditable == True%}
         <a href="\api\create_new_test" class="btn btn-warning">
             Создать новый тест
         </a>
-        <br>
         {% endif %}
-        {% for id, value in test_name %}
-        <a href="poll\{{id}}">{{value}}</a>
-        {% if isEditable == True%}
-        <a href="edit_test\{{id}}\0" class="btn btn-warning">
-            Изменить
-        </a>
-        {% endif %}
-        <br>
-        {% endfor %}
+        <div id="polls">
+            {% for id, value, group_id in test_name %}
+                <p id="{{group_id}}" name="poll_p">
+                <a href="poll\{{id}}" name="poll" id="{{group_id}}" >{{value}}</a>
+                {% if isEditable == True%}
+                    <a href="edit_test\{{id}}\0" class="btn btn-warning" id="{{group_id}}" name="edit">
+                        Изменить
+                    </a>
+                    
+                {% endif %}
+                </p>
+            {% endfor %}
+        </div>
 
-        <!-- <a href={{path}}>Изменить роли пользователям</a>
-        <a href={{path}}>Изменить роли пользователям</a> -->
+        <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
     </div>
     {% endblock %}
 </body>

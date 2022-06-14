@@ -2,9 +2,17 @@
 
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- загружаем Бутстрап -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <style type="text/css">
+  </style>
 </head>
 
-<body>
+<!-- <body>
     <div class="main-container">
         <img src="{{ url_for('static', filename='images/auth.gif') }}">
         <div class="item">
@@ -21,6 +29,38 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='script/script.js') }}"></script>
-</body>
+</body> -->
 
+
+<section class="vh-100">
+    <div class="container py-5 h-100">
+      <div class="row d-flex align-items-center justify-content-center h-100">
+        <div class="col-md-8 col-lg-7 col-xl-6">
+          <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-login-form/draw2.svg"
+            class="img-fluid" alt="Phone image">
+            <!-- <img src="{{ url_for('static', filename='images/auth.gif') }}" class="img-fluid" alt="Phone image"> -->
+        </div>
+        <div class="col-md-7 col-lg-5 col-xl-5 offset-xl-1">
+          <form>
+            <!-- Email input -->
+            <div class="form-outline mb-4">
+              <input id="login" class="form-control form-control-lg" />
+              <label class="form-label" for="form1Example13">Логин</label>
+            </div>
+  
+            <!-- Password input -->
+            <div class="form-outline mb-4">
+              <input type="password" id="password" class="form-control form-control-lg" />
+              <label class="form-label" for="form1Example23">Пароль</label>
+            </div>
+  
+  
+            <!-- Submit button -->
+            <button type="submit" onclick="doLogin()" class="btn btn-primary btn-lg btn-block">Залогиниться</button>
+            </form>
+        </div>
+        </div>
+    </div>
+</section>
+<script src="{{ url_for('static', filename='script/script.js') }}"></script>
 </html>
