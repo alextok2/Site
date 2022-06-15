@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
-    {% extends "main.html" %}
-    {% block content %}
+    
     
 <head>
     <!--<meta charset="utf-8"># -->
@@ -9,19 +8,27 @@
     <!-- <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylessheet" -->
 
 </head>
-
+{% extends "main.html" %}
+        {% block content %}
 <body>
     <div>
-        {% for item in range(results|length) %}
-            {{tests_name[item]}}
-            {{results[item].score}}
-            {{results[item].date}}
-            <!-- {{item.score}} -->
+        {% if text %}
+            <b>{{text}}</b>
+        {% endif %}
+        {% for user, result, max_score, group in users %}
+            ФИО:
+            <b>{{user.fio}}  </b>
+             Группа:
+            <b>{{group.name}}  </b>
+             Количество попыток: 
+             <b>{{result}} </b>
+             Лучшая попытка: 
+             <b>{{max_score}}%</b>
             <br>
 
         {% endfor %}
-
+        
     </div>
 </body>
-    {% endblock %}
+{% endblock %}
 </html>

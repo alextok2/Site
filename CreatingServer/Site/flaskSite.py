@@ -5,7 +5,7 @@ from traceback import print_tb
 from jinja2 import Template
 from dataclasses import field
 import datetime
-from operator import length_hint
+from operator import le, length_hint
 from re import A
 from flask import Flask, make_response, render_template, request, jsonify, redirect, url_for, Response
 from functools import wraps
@@ -388,63 +388,88 @@ def create_new_test(current_user):
 
     return redirect(url_for('edit_test', test_id=test_id, question_id=question_id))
 
+@app.route("/results/<int:id_test>")
+@token_required
+def results(current_user, id_test):
+    if current_user.role == Role.Curator.value:
+        db_sess = db_session.create_session()
+        test = db_sess.query(Test).filter(Test.id == id_test).first()
+
+        if current_user.id != test.user_id:
+            return "У вас нет прав."
+
+        users_id = []
+        results = db_sess.query(Result).filter(Result.test_id == test.id).all()
+        for result in results:
+            users_id.append(result.user_id)
+        results_set = list(set(users_id))
+
+
+        users_arr = []
+        max = 0
+        for result in results_set:
+
+            results1 = db_sess.query(Result).filter(Result.user_id == result).all()
+            for result1 in results1:
+                if result1.score > max:
+                    max = result1.score
+            
+            user = db_sess.query(User).filter(User.id == result).first()
+            group = db_sess.query(Group).filter(Group.id == user.group_id).first()
+
+            users_arr.append((user, len(results1), max, group))
+            max = 0
+
+        if len(results_set) == 0:
+            return render_template("results.html", users=users_arr, text="Тут пока пусто.")
+
+        return render_template("results.html", users=users_arr)
+
 
 @app.route("/dashboard")
 @token_required
 def show_dashboard_result(current_user):
+    
+
     if current_user.role == Role.Curator.value:
-        db_sess = db_session.create_session()
-        users = db_sess.query(User).filter(
-            User.group_id == current_user.group_id).all()
-        if user in users:
-            results = db_sess.query(Result).filter(
-                Result.user_id == user.id).all()
+        return redirect(url_for("all_poll"))
 
-        tests_name = []
+    db_sess = db_session.create_session()
+    results = db_sess.query(Result).filter(
+        Result.user_id == current_user.id).all()
 
-        for result in results:
-            tests_name.append(db_sess.query(Test).filter(
-                Test.id == result.test_id).first().name)
+    y = []
+    x = []
+    for result in results:
+        x.append(result.score)
+        y.append(db_sess.query(Test).filter(
+            Test.id == result.test_id).first().name)
 
-        return render_template("results.html", results=results, fio=current_user.fio, tests_name=tests_name)
+    if not x or not y:
+        return redirect(url_for("all_poll"))
 
-    elif current_user.role == Role.Student.value:
-        db_sess = db_session.create_session()
-        results = db_sess.query(Result).filter(
-            Result.user_id == current_user.id).all()
+    x_best = []
+    y_key = list(set(y))
 
-        y = []
-        x = []
-        for result in results:
-            x.append(result.score)
-            y.append(db_sess.query(Test).filter(
-                Test.id == result.test_id).first().name)
+    old_i = None
+    k = -1
+    for i in y_key:
+        for j in range(len(y)):
+            if y[j] == i:
+                if old_i != i:
+                    x_best.append(x[j])
+                    old_i = i
+                    k += 1
 
-        if not x or not y:
-            return redirect(url_for("all_poll"))
+                if x_best[k] < x[j]:
+                    x_best[k] = x[j]
 
-        x_best = []
-        y_key = list(set(y))
+    fig1 = px.bar(y=y_key, x=x_best, labels=dict(
+        x="Оценки", y="Дисциплины", color="Place"))
+    graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
 
-        old_i = None
-        k = -1
-        for i in y_key:
-            for j in range(len(y)):
-                if y[j] == i:
-                    if old_i != i:
-                        x_best.append(x[j])
-                        old_i = i
-                        k += 1
+    return render_template("index2.html", graph1JSON=graph1JSON)
 
-                    if x_best[k] < x[j]:
-                        x_best[k] = x[j]
-
-        fig1 = px.bar(y=y_key, x=x_best, labels=dict(
-            x="Оценки", y="Дисциплины", color="Place"))
-        graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
-
-        return render_template("index2.html", graph1JSON=graph1JSON)
-    return redirect("index")
 
 
 @app.route("/new_user")

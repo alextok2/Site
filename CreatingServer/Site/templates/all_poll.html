@@ -17,24 +17,54 @@
             <input type="checkbox" name="" id="checkbox_filter" value="{{group.id}}" onclick="Filter()" >  Только тесты для {{group.name}}</input>
         </p>
         {% if isEditable == True%}
-        <a href="\api\create_new_test" class="btn btn-warning">
-            Создать новый тест
-        </a>
+        <p>
+            <a href="\api\create_new_test" class="btn btn-danger ">
+                Создать новый тест
+            </a>
+        </p>
         {% endif %}
         <div id="polls">
             {% for id, value, group_id in test_name %}
                 <p id="{{group_id}}" name="poll_p">
-                <a href="poll\{{id}}" name="poll" id="{{group_id}}" >{{value}}</a>
+                <a href="poll\{{id}}" name="poll" id="{{group_id}}" class="btn btn-primary " >{{value}}</a>
                 {% if isEditable == True%}
                     <a href="edit_test\{{id}}\0" class="btn btn-warning" id="{{group_id}}" name="edit">
                         Изменить
                     </a>
-                    
+                    <a href="results\{{id}}" >
+                        Результаты
+                    </a>
                 {% endif %}
                 </p>
             {% endfor %}
         </div>
+        <script type="text/javascript">
+            let deleted = []
+            let input = document.getElementById('checkbox_filter')
+            // let polls = document.getElementsByName("poll");
+            // let edits = document.getElementsByName("edit");
+            let ps = document.getElementsByName("poll_p");
+            let polls = document.getElementById("polls")
+    
+            for (let i = 0; i < ps.length; i++) {
+                
+                if (ps[i].id != Number(input.value)){
+                    deleted.push(ps[i])
+                }
+            } 
+            for (let i = 0; i < ps.length; i++){
+                for (let j = 0; j < deleted.length; j++){
+                    if (ps[i] == deleted[j]){
+                        ps[i].remove()
+                    }
+                }
+            }
+            for (let i = 0; i < deleted.length; i++) {
+                polls.appendChild(deleted[i])
+                console.log(1)
+            }
 
+        </script>
         <script src="{{ url_for('static', filename='script/test_script.js') }}"></script>
     </div>
     {% endblock %}
