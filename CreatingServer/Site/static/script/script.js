@@ -12,7 +12,7 @@ function doLogin() {
         login: login,
         passwordHash: password
     }
-
+    console.log(JSON.stringify(loginData))
     fetch("/api/login", {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         headers: {
@@ -20,12 +20,14 @@ function doLogin() {
         },
         body: JSON.stringify(loginData)
     }).then(response => {
-        if (response.ok)
+        if (response.ok) {
+            console.log("я в респонсе")
             return response.json();
+        }
         else
             alert("произощла ошибка");
     }).then(json => {
-        console.log(json);
+        console.log("я здесь");
         document.cookie = "token=" + json.token;
         window.location.replace("/");
     }).catch(error => {
@@ -71,10 +73,9 @@ function checkPassword() {
     else {
         message.innerText = ""
         indicator.style.backgroundColor = "green";
-        
+
         password_bool = true
-        if(login_bool == true)
-        {
+        if (login_bool == true) {
             button.disabled = false;
         }
     }
@@ -83,7 +84,7 @@ function checkPassword() {
 function checkLoginExists() {
     let url = new URL(window.location.origin + "/register/loginExists");
     let button = document.getElementById("register_button");
-    let loginVal = document.getElementById("login").value; 
+    let loginVal = document.getElementById("login").value;
     let indicator = document.getElementsByClassName('loginIndicator')[0];
     console.log(loginVal);
     if (loginVal) {
@@ -104,8 +105,7 @@ function checkLoginExists() {
             if (json.isValid) {
                 indicator.style.backgroundColor = "green";
                 login_bool = true
-                if(password_bool == true)
-                {
+                if (password_bool == true) {
                     button.disabled = false;
                 }
 

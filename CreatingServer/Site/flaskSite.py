@@ -200,15 +200,16 @@ def all_poll(current_user):
     db_sess = db_session.create_session()
     tests = db_sess.query(Test).all()
 
-    group_user=db_sess.query(Group).filter(Group.id == current_user.group_id).first()
+    group_user = db_sess.query(Group).filter(
+        Group.id == current_user.group_id).first()
 
     # print(tests.name)
     i = 1
     test_name = []
     for test in tests:
         user = db_sess.query(User).filter(User.id == test.user_id).first()
-        group=db_sess.query(Group).filter(Group.id == user.group_id).first()
-        
+        group = db_sess.query(Group).filter(Group.id == user.group_id).first()
+
         test_name.append((i, test.name, group.id))
         i += 1
 
@@ -388,6 +389,7 @@ def create_new_test(current_user):
 
     return redirect(url_for('edit_test', test_id=test_id, question_id=question_id))
 
+
 @app.route("/results/<int:id_test>")
 @token_required
 def results(current_user, id_test):
@@ -404,18 +406,19 @@ def results(current_user, id_test):
             users_id.append(result.user_id)
         results_set = list(set(users_id))
 
-
         users_arr = []
         max = 0
         for result in results_set:
 
-            results1 = db_sess.query(Result).filter(Result.user_id == result).all()
+            results1 = db_sess.query(Result).filter(
+                Result.user_id == result).all()
             for result1 in results1:
                 if result1.score > max:
                     max = result1.score
-            
+
             user = db_sess.query(User).filter(User.id == result).first()
-            group = db_sess.query(Group).filter(Group.id == user.group_id).first()
+            group = db_sess.query(Group).filter(
+                Group.id == user.group_id).first()
 
             users_arr.append((user, len(results1), max, group))
             max = 0
@@ -429,7 +432,6 @@ def results(current_user, id_test):
 @app.route("/dashboard")
 @token_required
 def show_dashboard_result(current_user):
-    
 
     if current_user.role == Role.Curator.value:
         return redirect(url_for("all_poll"))
@@ -469,7 +471,6 @@ def show_dashboard_result(current_user):
     graph1JSON = json.dumps(fig1, cls=plotly.utils.PlotlyJSONEncoder)
 
     return render_template("index2.html", graph1JSON=graph1JSON)
-
 
 
 @app.route("/new_user")
@@ -636,6 +637,7 @@ def login():
     passwordHash = request.get_json()['passwordHash']
     print(login, passwordHash)
 
+    print(SearchLoginsAndPasswords(login, passwordHash))
     if SearchLoginsAndPasswords(login, passwordHash) == True:
 
         with db_session.create_session() as db_sess:
@@ -658,7 +660,6 @@ def login():
         # token.decode('utf-8')
         data = '{"token":"' + token.decode('utf-8') + '"}'
         res = json.loads(data)
-
         return res, 200
     return "Record not found", 400
 
@@ -670,7 +671,8 @@ def cabinet(current_user):
     if current_user.role != Role.Admin.value:
         is_admin = False
     db_sess = db_session.create_session()
-    group = db_sess.query(Group).filter(Group.id == current_user.group_id).first()
+    group = db_sess.query(Group).filter(
+        Group.id == current_user.group_id).first()
     return render_template('cabinet.html', fio=current_user.fio, is_admin=is_admin, group=group)
 
 
