@@ -13,10 +13,12 @@
     {% block content %}
 
     <div>
+        {% if isAdmin == False %}
         <p>
             <input type="checkbox" name="" id="checkbox_filter" value="{{group.id}}" onclick="Filter()" >  Только тесты для {{group.name}}</input>
         </p>
-        {% if isEditable == True%}
+        {% endif %}
+        {% if isEditable == True and isAdmin == False %}
         <p>
             <a href="\api\create_new_test" class="btn btn-danger ">
                 Создать новый тест

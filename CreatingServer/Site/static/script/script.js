@@ -27,7 +27,6 @@ function doLogin() {
         else
             alert("произощла ошибка");
     }).then(json => {
-        console.log("я здесь");
         document.cookie = "token=" + json.token;
         window.location.replace("/");
     }).catch(error => {

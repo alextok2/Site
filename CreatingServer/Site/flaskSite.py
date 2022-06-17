@@ -103,9 +103,7 @@ def SearchLoginsAndPasswords(search_login, search_hash):
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(
             User.login == search_login and User.password == search_hash).first()
-
         if user != None:
-            # print(user.fio)
             return True
     return False
 
@@ -195,8 +193,13 @@ def edit_role(current_user, id):
 @token_required
 def all_poll(current_user):
     isEditable = True
+    isAdmin = False
     if current_user.role != Role.Admin.value and current_user.role != Role.Curator.value:
         isEditable = False
+
+    if current_user.role == Role.Admin.value:
+        isAdmin = True
+
     db_sess = db_session.create_session()
     tests = db_sess.query(Test).all()
 
@@ -213,7 +216,7 @@ def all_poll(current_user):
         test_name.append((i, test.name, group.id))
         i += 1
 
-    return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"), isEditable=isEditable, group=group_user)
+    return render_template('all_poll.html', test_name=test_name, length=len(test_name), url=url_for("all_poll"), isEditable=isEditable, group=group_user, isAdmin=isAdmin)
 
 
 @app.route("/poll/<int:id_test>", methods=['GET', 'POST'])
@@ -377,10 +380,10 @@ def create_new_test(current_user):
     question_id = 0
 
     test = Test()
-    test.questions = " "
-    answers = {"answers": [[" ", " "]], "right_answers": [1]}
+    test.questions = "Пример вопроса"
+    answers = {"answers": [["Пример ответа 1", "Пример ответа 2"]], "right_answers": [1]}
     test.answers = json.dumps(answers)
-    test.name = ""
+    test.name = "Пример названия теста"
     test.max_score = 1
     test.user_id = current_user.id
 
@@ -393,12 +396,13 @@ def create_new_test(current_user):
 @app.route("/results/<int:id_test>")
 @token_required
 def results(current_user, id_test):
-    if current_user.role == Role.Curator.value:
+    if current_user.role == Role.Curator.value or current_user.role == Role.Admin.value:
         db_sess = db_session.create_session()
         test = db_sess.query(Test).filter(Test.id == id_test).first()
 
-        if current_user.id != test.user_id:
-            return "У вас нет прав."
+        if current_user.role != Role.Admin.value:
+            if current_user.id != test.user_id :
+                return "У вас нет прав."
 
         users_id = []
         results = db_sess.query(Result).filter(Result.test_id == test.id).all()
@@ -637,7 +641,6 @@ def login():
     passwordHash = request.get_json()['passwordHash']
     print(login, passwordHash)
 
-    print(SearchLoginsAndPasswords(login, passwordHash))
     if SearchLoginsAndPasswords(login, passwordHash) == True:
 
         with db_session.create_session() as db_sess:
